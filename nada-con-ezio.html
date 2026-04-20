@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Nada con Ezio">
+<meta name="theme-color" content="#1a1008">
+<title>Nada con Ezio</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0f0a04;
+    --bg2: #1a1008;
+    --bg3: #251508;
+    --card: #1e1208;
+    --border: #3a2010;
+    --border2: #5a3518;
+    --orange: #D85A30;
+    --orange2: #993C1D;
+    --orange3: #712B13;
+    --text: #f0e0c8;
+    --text2: #c09060;
+    --text3: #7a5030;
+    --text4: #4a2808;
+    --ac2: #FAECE7;
+    --ac2t: #712B13;
+    --bro: #EEEDFE;
+    --brot: #3C3489;
+    --rev: #E1F5EE;
+    --revt: #085041;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; overflow-x: hidden; }
+  body { max-width: 430px; margin: 0 auto; min-height: 100vh; }
+
+  /* TOPBAR */
+  .topbar { background: var(--bg2); padding: env(safe-area-inset-top, 14px) 16px 14px; padding-top: max(env(safe-area-inset-top), 14px); }
+  .animus-pill { display: inline-flex; align-items: center; gap: 6px; background: var(--bg3); border: 0.5px solid var(--border2); border-radius: 20px; padding: 4px 10px; margin-bottom: 10px; }
+  .animus-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--orange); animation: blink 2s infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+  .animus-txt { font-size: 11px; color: var(--text3); letter-spacing: 0.04em; }
+  .sync-row { display: flex; justify-content: space-between; align-items: flex-end; }
+  .hero-title { font-size: 22px; font-weight: 600; color: var(--text); }
+  .hero-sub { font-size: 12px; color: var(--text3); margin-top: 2px; }
+  .sync-block { text-align: right; }
+  .sync-val { font-size: 24px; font-weight: 600; color: var(--orange); line-height: 1; }
+  .sync-label { font-size: 10px; color: var(--text3); margin-top: 2px; }
+
+  /* MAP */
+  .map-section { background: #0a0603; padding: 14px 16px; border-bottom: 0.5px solid var(--border); }
+  .map-label { font-size: 10px; color: var(--text4); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
+
+  /* CHAPTER CARD */
+  .chapter-card { background: var(--bg2); padding: 14px 16px; border-bottom: 0.5px solid var(--border); }
+  .game-tag { display: inline-block; font-size: 10px; font-weight: 600; padding: 3px 9px; border-radius: 10px; margin-bottom: 8px; }
+  .tag-ac2 { background: var(--ac2); color: var(--ac2t); }
+  .tag-bro { background: var(--bro); color: var(--brot); }
+  .tag-rev { background: var(--rev); color: var(--revt); }
+  .ch-name { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 8px; line-height: 1.4; }
+  .ch-quote { font-size: 13px; color: var(--text2); font-style: italic; line-height: 1.6; border-left: 2px solid var(--orange); padding-left: 10px; }
+
+  /* STATS */
+  .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 12px 16px; background: var(--bg); border-bottom: 0.5px solid var(--border); }
+  .stat-box { background: var(--bg2); border-radius: 10px; padding: 10px 8px; text-align: center; }
+  .stat-n { font-size: 24px; font-weight: 600; color: var(--text); line-height: 1; }
+  .stat-l { font-size: 10px; color: var(--text3); margin-top: 4px; }
+
+  /* TABS */
+  .tabs { display: flex; background: var(--bg2); border-bottom: 0.5px solid var(--border); position: sticky; top: 0; z-index: 10; }
+  .tab { flex: 1; padding: 13px 4px; font-size: 14px; color: var(--text3); cursor: pointer; text-align: center; border-bottom: 2px solid transparent; }
+  .tab.on { color: var(--orange); border-bottom-color: var(--orange); font-weight: 600; }
+
+  /* VIEWS */
+  .view { display: none; padding: 16px; }
+  .view.on { display: block; }
+
+  /* SECTION LABEL */
+  .slbl { font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; }
+
+  /* WORKOUTS */
+  .wgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 18px; }
+  .wbtn { background: var(--bg2); border: 0.5px solid var(--border2); border-radius: 12px; padding: 14px 12px; text-align: left; cursor: pointer; }
+  .wbtn.sel { border: 2px solid var(--orange); background: #2a1208; }
+  .wday { font-size: 10px; color: var(--text3); margin-bottom: 3px; }
+  .wname { font-size: 14px; font-weight: 600; color: var(--text); }
+  .wvol { font-size: 11px; color: var(--text3); margin-top: 3px; }
+
+  /* FEELINGS */
+  .fgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 18px; }
+  .fbtn { padding: 12px 8px; border: 0.5px solid var(--border2); border-radius: 12px; background: var(--bg2); cursor: pointer; font-size: 13px; color: var(--text2); text-align: center; }
+  .fbtn.sel { border: 2px solid var(--orange); background: #2a1208; color: var(--orange); font-weight: 600; }
+
+  /* TEXTAREA */
+  textarea { width: 100%; border: 0.5px solid var(--border2); border-radius: 12px; padding: 12px; font-size: 14px; font-family: inherit; color: var(--text); background: var(--bg2); resize: none; margin-bottom: 16px; }
+  textarea:focus { outline: none; border-color: var(--orange); }
+  textarea::placeholder { color: var(--text4); }
+
+  /* BUTTONS */
+  .main-btn { width: 100%; padding: 15px; background: var(--orange2); color: white; border: none; border-radius: 14px; font-size: 15px; font-weight: 600; cursor: pointer; margin-bottom: 10px; }
+  .main-btn:disabled { background: var(--bg3); color: var(--text4); cursor: default; }
+  .main-btn:active:not(:disabled) { background: var(--orange3); }
+  .sec-btn { width: 100%; padding: 13px; background: transparent; color: var(--orange); border: 0.5px solid var(--orange); border-radius: 14px; font-size: 14px; font-weight: 500; cursor: pointer; display: none; margin-bottom: 10px; }
+  .sec-btn:active { background: #2a1208; }
+
+  /* NOTIF */
+  .notif { background: #2a1208; border: 0.5px solid var(--orange); border-radius: 12px; padding: 12px 14px; font-size: 13px; color: var(--text2); margin-bottom: 14px; display: none; line-height: 1.5; }
+
+  /* HISTORY */
+  .hist-item { display: flex; align-items: center; gap: 10px; padding: 12px 0; border-bottom: 0.5px solid var(--border); }
+  .hist-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--orange); flex-shrink: 0; }
+  .hist-info { flex: 1; min-width: 0; }
+  .hist-name { font-size: 14px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .hist-meta { font-size: 11px; color: var(--text3); margin-top: 3px; }
+  .hist-pdf { font-size: 12px; color: var(--orange); cursor: pointer; padding: 6px 10px; border: 0.5px solid var(--border2); border-radius: 8px; white-space: nowrap; flex-shrink: 0; }
+
+  /* PROGRESS BAR */
+  .progress-wrap { margin-top: 10px; }
+  .progress-bar-bg { width: 100%; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+  .progress-bar-fill { height: 100%; background: var(--orange); border-radius: 2px; transition: width 0.4s ease; }
+  .progress-label { display: flex; justify-content: space-between; margin-top: 5px; }
+  .progress-label span { font-size: 10px; color: var(--text3); }
+
+  .empty-msg { font-size: 13px; color: var(--text3); text-align: center; padding: 3rem 0; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="animus-pill">
+    <div class="animus-dot"></div>
+    <span class="animus-txt">ANIMUS 2.0 — ACTIVO</span>
+  </div>
+  <div class="sync-row">
+    <div>
+      <div class="hero-title">Nada con Ezio</div>
+      <div class="hero-sub">De Florencia a Constantinopla</div>
+    </div>
+    <div class="sync-block">
+      <div class="sync-val" id="sync-pct">0%</div>
+      <div class="sync-label">sincronizado</div>
+    </div>
+  </div>
+</div>
+
+<div class="map-section">
+  <div class="map-label">Ruta de Ezio</div>
+  <div id="map-wrap"></div>
+  <div class="progress-wrap">
+    <div class="progress-bar-bg"><div class="progress-bar-fill" id="prog-fill" style="width:0%"></div></div>
+    <div class="progress-label"><span id="prog-left">0 / 75 sesiones</span><span id="prog-right">0 memorias</span></div>
+  </div>
+</div>
+
+<div class="chapter-card">
+  <span class="game-tag tag-ac2" id="game-tag">Assassin's Creed II</span>
+  <div class="ch-name" id="ch-name">Florencia, 1476 — El nacimiento del Asesino</div>
+  <div class="ch-quote" id="ch-quote">"Nada es verdad, todo esta permitido." Giovanni Auditore es ejecutado. Ezio jura venganza. Tu tambien empiezas algo nuevo hoy.</div>
+</div>
+
+<div class="stats-row">
+  <div class="stat-box"><div class="stat-n" id="s-ses">0</div><div class="stat-l">Sesiones</div></div>
+  <div class="stat-box"><div class="stat-n" id="s-km">0.0</div><div class="stat-l">Km nadados</div></div>
+  <div class="stat-box"><div class="stat-n" id="s-str">0</div><div class="stat-l">Racha sem</div></div>
+</div>
+
+<div class="tabs">
+  <div class="tab on" onclick="goTab('log')">Registrar</div>
+  <div class="tab" onclick="goTab('hist')">Historial</div>
+</div>
+
+<div id="view-log" class="view on">
+  <div class="notif" id="notif"></div>
+  <div class="slbl">Entreno de hoy</div>
+  <div class="wgrid" id="wgrid"></div>
+  <div class="slbl">Como te has sentido?</div>
+  <div class="fgrid">
+    <div class="fbtn" onclick="pickFeel(this,'Destruido')">Destruido</div>
+    <div class="fbtn" onclick="pickFeel(this,'Regular')">Regular</div>
+    <div class="fbtn" onclick="pickFeel(this,'Bien')">Bien</div>
+    <div class="fbtn" onclick="pickFeel(this,'Volando')">Volando</div>
+  </div>
+  <textarea id="notes" rows="2" placeholder="Notas: hombro, algo nuevo, como fue el agua..."></textarea>
+  <button class="main-btn" id="log-btn" onclick="doLog()" disabled>Sincronizar memoria</button>
+  <button class="sec-btn" id="pdf-btn" onclick="dlLast()">Descargar hoja de memoria — PDF</button>
+</div>
+
+<div id="view-hist" class="view">
+  <div id="hist-list"></div>
+  <p class="empty-msg" id="hist-empty">Ninguna sesion aun. Al agua!</p>
+</div>
+
+<script>
+const CHAPTERS=[
+  {game:'AC II',tag:'tag-ac2',name:'Florencia, 1476 — El nacimiento del Asesino',quote:'"Nada es verdad, todo esta permitido." Giovanni Auditore es ejecutado. Ezio jura venganza. Tu tambien empiezas algo nuevo hoy.',city:'Florencia',sessions:5},
+  {game:'AC II',tag:'tag-ac2',name:'Florencia — La fuga de los Auditore',quote:'Ezio huye protegiendo a su familia sin saber ser Asesino, pero actua. A veces el primer paso es solo moverse.',city:'Florencia',sessions:10},
+  {game:'AC II',tag:'tag-ac2',name:'Monteriggioni — El tio Mario te entrena',quote:'"Ezio! Bienvenido a la familia." Aprendes a moverte, a caer, a respirar. Tu aprendes a bracear sin rendirte.',city:'Monteriggioni',sessions:15},
+  {game:'AC II',tag:'tag-ac2',name:'Venecia — Carnaval y sombras',quote:'Entre mascaras y tejados. Lleva meses entrenando. Ya no es el mismo chico impulsivo. Y tu tampoco.',city:'Venecia',sessions:20},
+  {game:'AC II',tag:'tag-ac2',name:'El Vaticano — Rodrigo Borgia',quote:'"He trabajado toda mi vida!" Ezio confronta al Papa. Hay mas sabiduria en el. Hay mas fuerza tambien en ti.',city:'Roma',sessions:25},
+  {game:'AC II',tag:'tag-ac2',name:'Minerva habla — El mensaje trasciende',quote:'"No somos dioses. Somos como tu." 30 sesiones. Lo que construyes trasciende una bascula.',city:'Roma',sessions:30},
+  {game:'Brotherhood',tag:'tag-bro',name:'Roma — Cesare Borgia ataca Monteriggioni',quote:'Todo destruido en una noche. Pero Ezio no colapsa, reconstruye. Tu tambien has tenido dias malos. Aqui sigues.',city:'Roma',sessions:35},
+  {game:'Brotherhood',tag:'tag-bro',name:'Roma — Reconstruyendo la Hermandad',quote:'Nadie llega solo a ningun sitio. Tu tienes tus entrenos, tu piscina, tu constancia. Eso es tu hermandad.',city:'Roma',sessions:40},
+  {game:'Brotherhood',tag:'tag-bro',name:'Los Borgia acorralados',quote:'Ezio desmantela su poder pieza a pieza. 40 sesiones. Tu lo haces pieza a pieza tambien.',city:'Roma',sessions:45},
+  {game:'Brotherhood',tag:'tag-bro',name:'Viana — La caida de Cesare',quote:'"Nadie puede matarme!" grita antes de caer. La arrogancia siempre cae. La constancia, nunca.',city:'Viana',sessions:50},
+  {game:'Brotherhood',tag:'tag-bro',name:'Brotherhood completado',quote:'50 sesiones. Mira atras. Cuanto has cambiado desde enero?',city:'Roma',sessions:55},
+  {game:'Revelations',tag:'tag-rev',name:'Constantinopla — El Asesino Mayor',quote:'Ezio tiene 52 anos y sigue en pie. Viene a buscar respuestas, no gloria. Tu tambien estas en eso.',city:'Constantinopla',sessions:60},
+  {game:'Revelations',tag:'tag-rev',name:'El Gran Bazar — Yusuf Tazim',quote:'"Aqui hacemos las cosas diferente." A veces aprender viene de donde menos esperas.',city:'Constantinopla',sessions:65},
+  {game:'Revelations',tag:'tag-rev',name:'Las memorias de Altair',quote:'Generaciones de hombres que eligieron mejorar cada dia. Tu eres parte de esa cadena ahora.',city:'Masyaf',sessions:70},
+  {game:'Revelations',tag:'tag-rev',name:'Masyaf — El ultimo capitulo de Ezio',quote:'"He vivido como un soldado, he luchado como un guerrero. Ya es suficiente." 75 sesiones. Eres otro.',city:'Masyaf',sessions:75},
+];
+
+const CITIES=[
+  {name:'Florencia',x:0.14,y:0.40},
+  {name:'Monteriggioni',x:0.22,y:0.55},
+  {name:'Venecia',x:0.32,y:0.22},
+  {name:'Roma',x:0.28,y:0.68},
+  {name:'Viana',x:0.07,y:0.55},
+  {name:'Constantinopla',x:0.76,y:0.32},
+  {name:'Masyaf',x:0.93,y:0.20},
+];
+const CITY_ORDER=['Florencia','Monteriggioni','Venecia','Roma','Viana','Constantinopla','Masyaf'];
+const CHAPTER_CITIES=['Florencia','Florencia','Monteriggioni','Venecia','Roma','Roma','Roma','Roma','Roma','Viana','Roma','Constantinopla','Constantinopla','Masyaf','Masyaf'];
+
+const WORKOUTS=[
+  {id:'R',day:'Lunes',name:'Resistencia',vol:'~2.050 m',km:2.05},
+  {id:'M',day:'Martes / Jueves',name:'Tecnica y fondo',vol:'~2.150 m',km:2.15},
+  {id:'T',day:'Miercoles',name:'Tecnica pura',vol:'~1.950 m',km:1.95},
+  {id:'C',day:'Viernes',name:'Combinado',vol:'~2.050 m',km:2.05},
+];
+
+let state={sessions:[],selW:null,selF:null};
+let lastSD=null;
+
+function save(){try{localStorage.setItem('ezio_pwa',JSON.stringify(state));}catch(e){}}
+function load(){try{const d=localStorage.getItem('ezio_pwa');if(d)state=JSON.parse(d);}catch(e){}}
+function getCI(n){for(let i=0;i<CHAPTERS.length;i++){if(n<CHAPTERS[i].sessions)return i;}return CHAPTERS.length-1;}
+function totalKm(){return state.sessions.reduce((a,s)=>a+s.km,0);}
+function getWeek(d){const t=new Date(d);t.setHours(0,0,0,0);t.setDate(t.getDate()-(t.getDay()||7)+1);return t.toISOString().slice(0,10);}
+function prevWeek(w){const d=new Date(w);d.setDate(d.getDate()-7);return d.toISOString().slice(0,10);}
+function calcStreak(){
+  if(!state.sessions.length)return 0;
+  const wk={};state.sessions.forEach(s=>{const w=getWeek(new Date(s.date));wk[w]=(wk[w]||0)+1;});
+  let n=0,w=getWeek(new Date());while(wk[w]){n++;w=prevWeek(w);}return n;
+}
+
+function buildMap(){
+  const W=window.innerWidth>430?398:window.innerWidth-32;
+  const H=120;
+  const cities={};
+  CITIES.forEach(c=>{cities[c.name]={x:Math.round(c.x*W),y:Math.round(c.y*H)};});
+  const n=state.sessions.length;
+  const ci=getCI(n);
+  const currentCity=CHAPTER_CITIES[Math.min(ci,CHAPTER_CITIES.length-1)];
+  const currentIdx=CITY_ORDER.indexOf(currentCity);
+
+  let lines='';
+  for(let i=0;i<CITY_ORDER.length-1;i++){
+    const a=cities[CITY_ORDER[i]],b=cities[CITY_ORDER[i+1]];
+    const done=i<currentIdx;
+    lines+=`<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="${done?'#D85A30':'#3a2010'}" stroke-width="1.5" stroke-dasharray="${done?'':'5,3'}" stroke-linecap="round"/>`;
+  }
+
+  let dots='';
+  CITY_ORDER.forEach((name,i)=>{
+    const c=cities[name];
+    const visited=i<=currentIdx;
+    const isCurrent=name===currentCity;
+    if(isCurrent){
+      dots+=`<circle cx="${c.x}" cy="${c.y}" r="9" fill="#D85A30" opacity="0.25"/>`;
+      dots+=`<circle cx="${c.x}" cy="${c.y}" r="6" fill="#D85A30" stroke="#f5c090" stroke-width="1.5"/>`;
+      dots+=`<circle cx="${c.x}" cy="${c.y}" r="2.5" fill="white"/>`;
+    } else if(visited){
+      dots+=`<circle cx="${c.x}" cy="${c.y}" r="5" fill="#993C1D" stroke="#D85A30" stroke-width="1"/>`;
+    } else {
+      dots+=`<circle cx="${c.x}" cy="${c.y}" r="4" fill="#1a0f06" stroke="#4a2808" stroke-width="1"/>`;
+    }
+    const anchor=c.x>W*0.65?'end':'start';
+    const tx=c.x+(c.x>W*0.65?-10:10);
+    const ty=c.y>H*0.6?c.y-10:c.y+18;
+    dots+=`<text x="${tx}" y="${ty}" font-size="9" fill="${visited?'#c07040':'#4a2808'}" text-anchor="${anchor}" font-family="-apple-system,sans-serif">${name}</text>`;
+  });
+
+  document.getElementById('map-wrap').innerHTML=`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">${lines}${dots}</svg>`;
+}
+
+function renderAll(){
+  const n=state.sessions.length;
+  const ci=getCI(n);
+  const c=CHAPTERS[ci];
+  const pct=Math.min(Math.round((n/75)*100),100);
+  document.getElementById('sync-pct').textContent=pct+'%';
+  document.getElementById('ch-name').textContent=c.name;
+  document.getElementById('ch-quote').textContent=c.quote;
+  const tag=document.getElementById('game-tag');
+  tag.textContent=c.game==='AC II'?"Assassin's Creed II":c.game==='Brotherhood'?'AC Brotherhood':'AC Revelations';
+  tag.className='game-tag '+c.tag;
+  document.getElementById('s-ses').textContent=n;
+  document.getElementById('s-km').textContent=totalKm().toFixed(1);
+  document.getElementById('s-str').textContent=calcStreak();
+  document.getElementById('prog-fill').style.width=pct+'%';
+  document.getElementById('prog-left').textContent=n+' / 75 sesiones';
+  document.getElementById('prog-right').textContent=ci+' memorias';
+  buildMap();
+}
+
+function renderWorkouts(){
+  const g=document.getElementById('wgrid');g.innerHTML='';
+  WORKOUTS.forEach(w=>{
+    const d=document.createElement('div');
+    d.className='wbtn'+(state.selW===w.id?' sel':'');
+    d.innerHTML=`<div class="wday">${w.day}</div><div class="wname">${w.name}</div><div class="wvol">${w.vol}</div>`;
+    d.onclick=()=>{state.selW=w.id;renderWorkouts();checkBtn();};
+    g.appendChild(d);
+  });
+}
+
+function pickFeel(el,f){
+  state.selF=f;
+  document.querySelectorAll('.fbtn').forEach(b=>b.classList.remove('sel'));
+  el.classList.add('sel');checkBtn();
+}
+function checkBtn(){document.getElementById('log-btn').disabled=!(state.selW&&state.selF);}
+
+function doLog(){
+  const w=WORKOUTS.find(x=>x.id===state.selW);
+  const now=new Date();
+  const notes=document.getElementById('notes').value;
+  state.sessions.push({workout:w.name,feeling:state.selF,km:w.km,date:now.toISOString(),notes});
+  save();
+  const n=state.sessions.length;
+  const ci=getCI(n);
+  lastSD={sessionNum:n,workout:w.name,feeling:state.selF,km:w.km,totalKm:totalKm(),streak:calcStreak(),notes,date:now.toISOString(),chapter:CHAPTERS[ci]};
+  state.selW=null;state.selF=null;
+  document.querySelectorAll('.fbtn').forEach(b=>b.classList.remove('sel'));
+  document.getElementById('notes').value='';
+  checkBtn();renderWorkouts();renderAll();renderHist();
+  const msg=getAchievement(n)||'Memoria sincronizada — sesion #'+n+' completada.';
+  showNotif(msg);
+  document.getElementById('pdf-btn').style.display='block';
+}
+
+function getAchievement(n){
+  const msgs={5:'Memoria desbloqueada — La fuga de los Auditore.',10:'Monteriggioni. El tio Mario te recibe.',15:'Venecia. Entre mascaras y sombras.',20:'El Vaticano. Rodrigo Borgia tiembla.',25:'Minerva habla. 25 sesiones.',30:'Roma. La Hermandad necesita reconstruirse.',35:'Nadie llega solo. Sigues.',40:'40 sesiones. Cesare acorralado.',45:'Sigue apretando. Casi ahi.',50:'Brotherhood completado. Mira atras.',55:'Constantinopla. Ezio tiene 52 anos y sigue.',60:'60 sesiones. Las memorias de Altair.',65:'Yusuf Tazim. Nuevos aliados.',70:'Una cadena que no se rompe.',75:'REVELATIONS COMPLETADO. 75 sesiones. Eres otro.'};
+  return msgs[n]||null;
+}
+
+function showNotif(msg){
+  const nb=document.getElementById('notif');
+  nb.textContent=msg;nb.style.display='block';
+  setTimeout(()=>nb.style.display='none',5000);
+}
+
+function renderHist(){
+  const list=document.getElementById('hist-list');
+  const empty=document.getElementById('hist-empty');
+  if(!state.sessions.length){list.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  list.innerHTML=[...state.sessions].reverse().slice(0,30).map((s,ri)=>{
+    const realIdx=state.sessions.length-1-ri;
+    const d=new Date(s.date).toLocaleDateString('es-ES',{weekday:'short',day:'numeric',month:'short'});
+    return `<div class="hist-item"><div class="hist-dot"></div><div class="hist-info"><div class="hist-name">#${realIdx+1} ${s.workout} · ${s.feeling}</div><div class="hist-meta">${d}${s.notes?' — '+s.notes:''}</div></div><div class="hist-pdf" onclick="dlIdx(${realIdx})">PDF</div></div>`;
+  }).join('');
+}
+
+function goTab(t){
+  document.querySelectorAll('.tab').forEach((el,i)=>el.classList.toggle('on',['log','hist'][i]===t));
+  document.querySelectorAll('.view').forEach(el=>el.classList.remove('on'));
+  document.getElementById('view-'+t).classList.add('on');
+}
+
+function makePDF(sd){
+  if(!window.jspdf){alert('PDF no disponible aun, espera un momento.');return;}
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({unit:'mm',format:'a4'});
+  const W=210,H=297;
+  doc.setFillColor(15,10,5);doc.rect(0,0,W,H,'F');
+  doc.setFillColor(216,90,48);doc.rect(0,0,W,3,'F');
+  doc.setFillColor(28,18,8);doc.rect(0,3,W,48,'F');
+  doc.setTextColor(216,90,48);doc.setFontSize(8);doc.setFont('helvetica','bold');
+  doc.text('ANIMUS 2.0  //  MEMORY SEQUENCE',20,16);
+  const pct=Math.min(Math.round((sd.sessionNum/75)*100),100);
+  doc.setTextColor(140,100,60);doc.text('SYNC: '+pct+'%',W-20,16,{align:'right'});
+  doc.setTextColor(240,220,190);doc.setFontSize(20);doc.text('NADA CON EZIO',20,30);
+  doc.setTextColor(160,110,60);doc.setFontSize(9);doc.setFont('helvetica','normal');
+  doc.text('De Florencia a Constantinopla  //  Una sesion a la vez',20,40);
+  doc.setDrawColor(216,90,48);doc.setLineWidth(0.3);doc.line(20,51,W-20,51);
+  doc.setFillColor(22,14,6);doc.rect(20,57,W-40,52,'F');
+  doc.setDrawColor(70,40,15);doc.setLineWidth(0.2);doc.rect(20,57,W-40,52);
+  doc.setFillColor(216,90,48);doc.roundedRect(24,61,38,6,1,1,'F');
+  doc.setTextColor(255,230,200);doc.setFontSize(7);doc.setFont('helvetica','bold');
+  doc.text(sd.chapter.game.toUpperCase(),43,65.5,{align:'center'});
+  doc.setTextColor(140,90,50);doc.setFontSize(8);doc.setFont('helvetica','normal');
+  doc.text('MEMORIA '+sd.sessionNum+' DE 75',24,76);
+  doc.setTextColor(235,215,185);doc.setFontSize(12);doc.setFont('helvetica','bold');
+  const nl=doc.splitTextToSize(sd.chapter.name,W-50);doc.text(nl,24,84);
+  doc.setTextColor(150,110,70);doc.setFontSize(9);doc.setFont('helvetica','italic');
+  const ql=doc.splitTextToSize(sd.chapter.quote,W-50);
+  doc.text(ql,24,84+(nl.length*6));
+  const sy=122;
+  doc.setTextColor(216,90,48);doc.setFontSize(8);doc.setFont('helvetica','bold');doc.text('// DATOS DE LA SESION',20,sy);
+  const boxes=[{l:'SESION N.',v:'#'+sd.sessionNum},{l:'ENTRENO',v:sd.workout},{l:'ESTADO',v:sd.feeling},{l:'KM SESION',v:sd.km.toFixed(2)+' km'},{l:'KM TOTALES',v:sd.totalKm.toFixed(1)+' km'},{l:'RACHA',v:sd.streak+' sem'}];
+  const bW=(W-40)/3,bH=22;
+  boxes.forEach((b,i)=>{
+    const col=i%3,row=Math.floor(i/3);
+    const bX=20+col*bW,bY=sy+6+row*(bH+4);
+    doc.setFillColor(22,14,6);doc.rect(bX,bY,bW-2,bH,'F');
+    doc.setDrawColor(60,35,12);doc.setLineWidth(0.2);doc.rect(bX,bY,bW-2,bH);
+    doc.setTextColor(110,75,40);doc.setFontSize(7);doc.setFont('helvetica','normal');doc.text(b.l,bX+4,bY+7);
+    doc.setTextColor(235,195,145);doc.setFontSize(11);doc.setFont('helvetica','bold');doc.text(b.v,bX+4,bY+17);
+  });
+  if(sd.notes&&sd.notes.trim()){
+    const ny=sy+6+2*(bH+4)+14;
+    doc.setTextColor(216,90,48);doc.setFontSize(8);doc.setFont('helvetica','bold');doc.text('// NOTAS DEL DIA',20,ny);
+    doc.setFillColor(22,14,6);doc.rect(20,ny+4,W-40,22,'F');
+    doc.setDrawColor(60,35,12);doc.setLineWidth(0.2);doc.rect(20,ny+4,W-40,22);
+    doc.setTextColor(170,130,80);doc.setFontSize(9);doc.setFont('helvetica','italic');
+    doc.text(doc.splitTextToSize(sd.notes,W-50),24,ny+13);
+  }
+  const dy=H-28;
+  doc.setDrawColor(50,30,10);doc.setLineWidth(0.2);doc.line(20,dy,W-20,dy);
+  doc.setTextColor(90,60,30);doc.setFontSize(8);doc.setFont('helvetica','normal');
+  const ds=new Date(sd.date).toLocaleDateString('es-ES',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  doc.text(ds.toUpperCase(),20,dy+8);
+  doc.text('NADA CON EZIO  //  AC TRAINING LOG',W-20,dy+8,{align:'right'});
+  doc.setFillColor(216,90,48);doc.rect(0,H-3,W,3,'F');
+  doc.save('memoria-ezio-'+sd.sessionNum+'.pdf');
+}
+
+function dlLast(){if(lastSD)makePDF(lastSD);}
+function dlIdx(i){
+  const s=state.sessions[i];const n=i+1;
+  const ci=getCI(n);
+  const km=state.sessions.slice(0,n).reduce((a,x)=>a+x.km,0);
+  makePDF({sessionNum:n,workout:s.workout,feeling:s.feeling,km:s.km,totalKm:km,streak:0,notes:s.notes||'',date:s.date,chapter:CHAPTERS[ci]});
+}
+
+load();renderAll();renderWorkouts();renderHist();
+window.addEventListener('resize',()=>buildMap());
+</script>
+</body>
+</html>
