@@ -1,0 +1,1361 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Nada con Ezio">
+<meta name="theme-color" content="#1a1008">
+<title>Nada con Ezio</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root{
+  --bg:#0f0a04;--bg2:#1a1008;--bg3:#251508;
+  --border:#3a2010;--border2:#5a3518;
+  --or:#D85A30;--or2:#993C1D;--or3:#712B13;
+  --tx:#f0e0c8;--tx2:#c09060;--tx3:#7a5030;--tx4:#4a2808;
+  --r:14px;--rs:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{min-height:100%;background:var(--bg);color:var(--tx);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;}
+
+/* ── AUTH ── */
+#auth-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:2rem;}
+.auth-logo{font-size:26px;font-weight:700;color:var(--tx);margin-bottom:4px;}
+.auth-sub{font-size:13px;color:var(--tx3);margin-bottom:2rem;text-align:center;line-height:1.5;}
+.auth-card{background:var(--bg2);border:0.5px solid var(--border2);border-radius:var(--r);padding:1.5rem;width:100%;max-width:360px;}
+.auth-tabs{display:flex;margin-bottom:1.25rem;border-bottom:0.5px solid var(--border);}
+.auth-tab{flex:1;padding:10px;font-size:13px;color:var(--tx3);cursor:pointer;text-align:center;border-bottom:2px solid transparent;}
+.auth-tab.on{color:var(--or);border-bottom-color:var(--or);font-weight:600;}
+.auth-field{margin-bottom:12px;}
+.auth-field label{display:block;font-size:11px;color:var(--tx3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em;}
+.auth-field input{width:100%;background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--rs);padding:12px;font-size:14px;color:var(--tx);outline:none;font-family:inherit;}
+.auth-field input:focus{border-color:var(--or);}
+.remember-row{display:flex;align-items:center;gap:8px;margin-bottom:14px;}
+.remember-row input[type=checkbox]{width:16px;height:16px;accent-color:var(--or);cursor:pointer;flex-shrink:0;}
+.remember-row label{font-size:12px;color:var(--tx3);cursor:pointer;}
+.auth-btn{width:100%;padding:13px;background:var(--or2);color:#fff;border:none;border-radius:var(--rs);font-size:14px;font-weight:600;cursor:pointer;}
+.auth-btn:active{background:var(--or3);}
+.auth-msg{font-size:12px;color:var(--or);margin-top:10px;text-align:center;min-height:18px;line-height:1.4;}
+.auth-or{font-size:11px;color:var(--tx4);text-align:center;margin:12px 0;}
+.sec-btn{width:100%;padding:12px;background:transparent;color:var(--or);border:0.5px solid var(--or);border-radius:var(--rs);font-size:13px;cursor:pointer;}
+
+/* ── ONBOARDING ── */
+#onboarding{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:2rem;}
+.ob-card{background:var(--bg2);border:0.5px solid var(--border2);border-radius:var(--r);padding:1.5rem;width:100%;max-width:420px;}
+.ob-title{font-size:18px;font-weight:700;color:var(--tx);margin-bottom:6px;}
+.ob-sub{font-size:13px;color:var(--tx3);margin-bottom:1.5rem;line-height:1.5;}
+.ob-option{background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--rs);padding:14px;margin-bottom:10px;cursor:pointer;}
+.ob-option h3{font-size:14px;font-weight:600;color:var(--tx);margin-bottom:4px;}
+.ob-option p{font-size:12px;color:var(--tx3);line-height:1.4;}
+.ob-option.sel{border:1.5px solid var(--or);background:#2a1208;}
+
+/* ── APP LAYOUT ── */
+#app{display:none;}
+.app-inner{display:flex;flex-direction:column;min-height:100vh;}
+.left-col{width:100%;}
+.right-col{width:100%;flex:1;}
+@media(min-width:860px){
+  .app-inner{flex-direction:row;align-items:stretch;}
+  .left-col{width:340px;min-width:340px;max-width:340px;position:sticky;top:0;height:100vh;overflow-y:auto;border-right:0.5px solid var(--border);flex-shrink:0;}
+  .right-col{flex:1;min-width:0;}
+}
+
+/* ── AVATAR ── */
+.avatar-section{background:var(--bg2);padding:16px;border-bottom:0.5px solid var(--border);display:flex;align-items:center;gap:14px;}
+.avatar-img{width:72px;height:72px;border-radius:50%;border:2px solid var(--or);object-fit:cover;flex-shrink:0;background:var(--bg3);}
+.avatar-svg{width:72px;height:72px;border-radius:50%;border:2px solid var(--or);flex-shrink:0;background:var(--bg3);overflow:hidden;}
+.avatar-info{flex:1;min-width:0;}
+.avatar-era{font-size:10px;color:var(--or);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px;}
+.avatar-name{font-size:15px;font-weight:700;color:var(--tx);margin-bottom:2px;}
+.avatar-age{font-size:12px;color:var(--tx3);}
+
+/* ── TOPBAR ── */
+.topbar{background:var(--bg2);padding:max(env(safe-area-inset-top),14px) 16px 14px;}
+.animus-pill{display:inline-flex;align-items:center;gap:6px;background:var(--bg3);border:0.5px solid var(--border2);border-radius:20px;padding:4px 10px;margin-bottom:10px;}
+.animus-dot{width:6px;height:6px;border-radius:50%;background:var(--or);animation:blink 2s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.animus-txt{font-size:11px;color:var(--tx3);letter-spacing:.04em;}
+.sync-row{display:flex;justify-content:space-between;align-items:flex-end;}
+.hero-title{font-size:22px;font-weight:700;color:var(--tx);}
+.hero-sub{font-size:12px;color:var(--tx3);margin-top:2px;}
+.sync-val{font-size:26px;font-weight:700;color:var(--or);line-height:1;}
+.sync-label{font-size:10px;color:var(--tx3);margin-top:2px;text-align:right;}
+.user-row{display:flex;justify-content:space-between;align-items:center;margin-top:8px;}
+.user-email{font-size:11px;color:var(--tx4);}
+.logout-lnk{font-size:11px;color:var(--tx3);cursor:pointer;text-decoration:underline;}
+
+/* ── MAP ── */
+.map-section{background:#090602;padding:14px 16px;border-top:0.5px solid var(--border);border-bottom:0.5px solid var(--border);}
+.map-label{font-size:10px;color:var(--tx4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;}
+#map-wrap{width:100%;line-height:0;overflow:hidden;}
+.prog-wrap{margin-top:8px;}
+.prog-bg{width:100%;height:4px;background:var(--border);border-radius:2px;overflow:hidden;}
+.prog-fill{height:100%;background:var(--or);border-radius:2px;transition:width .4s;}
+.prog-labels{display:flex;justify-content:space-between;margin-top:4px;}
+.prog-labels span{font-size:10px;color:var(--tx3);}
+
+/* ── CHAPTER ── */
+.chapter-card{background:var(--bg2);padding:12px 16px;border-bottom:0.5px solid var(--border);}
+.game-tag{display:inline-block;font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;margin-bottom:6px;}
+.tag-ac2{background:#FAECE7;color:#712B13;}
+.tag-bro{background:#EEEDFE;color:#3C3489;}
+.tag-rev{background:#E1F5EE;color:#085041;}
+.ch-name{font-size:13px;font-weight:600;color:var(--tx);margin-bottom:5px;line-height:1.4;}
+.ch-quote{font-size:11px;color:var(--tx2);font-style:italic;line-height:1.6;border-left:2px solid var(--or);padding-left:8px;border-radius:0;}
+
+/* ── STATS ── */
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:10px 16px;background:var(--bg);border-bottom:0.5px solid var(--border);}
+.stat-box{background:var(--bg2);border-radius:var(--rs);padding:8px;text-align:center;}
+.stat-n{font-size:22px;font-weight:700;color:var(--tx);line-height:1;}
+.stat-l{font-size:10px;color:var(--tx3);margin-top:3px;}
+
+/* ── TABS ── */
+.tabs{display:flex;background:var(--bg2);border-bottom:0.5px solid var(--border);position:sticky;top:0;z-index:20;}
+.tab{flex:1;padding:12px 4px;font-size:12px;color:var(--tx3);cursor:pointer;text-align:center;border-bottom:2px solid transparent;}
+.tab.on{color:var(--or);border-bottom-color:var(--or);font-weight:600;}
+.view{display:none;padding:14px 16px;}
+.view.on{display:block;}
+
+/* ── FORM ── */
+.slbl{font-size:11px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;}
+.wgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;}
+.wbtn{background:var(--bg2);border:0.5px solid var(--border2);border-radius:var(--r);padding:12px 10px;text-align:left;cursor:pointer;}
+.wbtn.sel{border:2px solid var(--or);background:#2a1208;}
+.wday{font-size:10px;color:var(--tx3);margin-bottom:2px;}
+.wname{font-size:13px;font-weight:600;color:var(--tx);}
+.wvol{font-size:10px;color:var(--tx3);margin-top:2px;}
+.wbtn.custom-card{border-style:dashed;}
+.wbtn.custom-card .wname{color:var(--or);}
+
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;}
+.fbtn{padding:12px 8px;border:0.5px solid var(--border2);border-radius:var(--r);background:var(--bg2);cursor:pointer;font-size:13px;color:var(--tx2);text-align:center;}
+.fbtn.sel{border:2px solid var(--or)!important;background:#2a1208!important;color:var(--or)!important;font-weight:600!important;}
+
+/* time inputs */
+.time-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;}
+.time-block{background:var(--bg2);border:0.5px solid var(--border2);border-radius:var(--rs);padding:10px 12px;}
+.time-block label{display:block;font-size:10px;color:var(--tx3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em;}
+.time-block input[type=time]{width:100%;background:transparent;border:none;color:var(--tx);font-size:15px;font-weight:600;font-family:inherit;outline:none;cursor:pointer;}
+.time-block input[type=time]::-webkit-calendar-picker-indicator{filter:invert(0.6) sepia(1) hue-rotate(330deg);cursor:pointer;}
+.pace-chip{background:var(--bg3);border:0.5px solid var(--border2);border-radius:8px;padding:8px 12px;margin-bottom:16px;display:none;font-size:12px;color:var(--tx2);line-height:1.6;}
+.pace-chip strong{color:var(--or);}
+
+textarea,input[type=text],input[type=number],input[type=password],input[type=email]{
+  width:100%;border:0.5px solid var(--border2);border-radius:var(--rs);
+  padding:11px;font-size:14px;font-family:inherit;color:var(--tx);
+  background:var(--bg2);outline:none;display:block;
+}
+textarea{resize:none;margin-bottom:12px;}
+input:focus,textarea:focus{border-color:var(--or);}
+::placeholder{color:var(--tx4);}
+.field-wrap{margin-bottom:12px;}
+
+.main-btn{width:100%;padding:13px;background:var(--or2);color:#fff;border:none;border-radius:var(--r);font-size:14px;font-weight:600;cursor:pointer;margin-bottom:10px;display:block;}
+.main-btn:disabled{background:var(--bg3);color:var(--tx4);cursor:default;}
+.main-btn:active:not(:disabled){background:var(--or3);}
+.ghost-btn{width:100%;padding:11px;background:transparent;color:var(--or);border:0.5px solid var(--or);border-radius:var(--r);font-size:13px;font-weight:500;cursor:pointer;margin-bottom:10px;display:block;}
+
+.notif{background:#2a1208;border:0.5px solid var(--or);border-radius:var(--rs);padding:10px 14px;font-size:13px;color:var(--tx2);margin-bottom:12px;display:none;line-height:1.5;}
+
+/* ── HISTORY ── */
+.hist-item{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:0.5px solid var(--border);}
+.hist-dot{width:8px;height:8px;border-radius:50%;background:var(--or);flex-shrink:0;}
+.hist-info{flex:1;min-width:0;}
+.hist-name{font-size:13px;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.hist-meta{font-size:11px;color:var(--tx3);margin-top:2px;}
+.hist-act{font-size:11px;color:var(--or);cursor:pointer;padding:5px 9px;border:0.5px solid var(--border2);border-radius:8px;white-space:nowrap;flex-shrink:0;}
+.empty-msg{font-size:13px;color:var(--tx3);text-align:center;padding:3rem 0;}
+
+/* ── MY WORKOUTS ── */
+.mw-item{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:0.5px solid var(--border);}
+.mw-info{flex:1;min-width:0;}
+.mw-name{font-size:13px;font-weight:600;color:var(--tx);}
+.mw-meta{font-size:11px;color:var(--tx3);margin-top:2px;}
+.mw-del{font-size:18px;color:var(--tx4);cursor:pointer;padding:4px 8px;flex-shrink:0;}
+
+/* ── MODALS ── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:100;display:none;align-items:flex-end;justify-content:center;}
+.overlay.on{display:flex;}
+.modal{background:var(--bg2);border-radius:var(--r) var(--r) 0 0;padding:18px 16px max(env(safe-area-inset-bottom),18px);width:100%;max-width:560px;max-height:90vh;overflow-y:auto;}
+.modal-title{font-size:16px;font-weight:700;color:var(--tx);margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;}
+.modal-close{font-size:22px;color:var(--tx3);cursor:pointer;}
+
+/* ── PDF MODAL ── */
+.pdf-overlay{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:200;display:none;flex-direction:column;}
+.pdf-overlay.on{display:flex;}
+.pdf-topbar{display:flex;justify-content:space-between;align-items:center;padding:max(env(safe-area-inset-top),14px) 16px 14px;background:var(--bg2);flex-shrink:0;border-bottom:0.5px solid var(--border);}
+.pdf-topbar-title{font-size:15px;font-weight:600;color:var(--tx);}
+.pdf-close{font-size:24px;color:var(--tx3);cursor:pointer;line-height:1;}
+.pdf-scroll{flex:1;overflow-y:auto;padding:16px;}
+.pdf-dl{margin:0 16px max(env(safe-area-inset-bottom),14px);padding:13px;background:var(--or2);color:#fff;border:none;border-radius:var(--r);font-size:14px;font-weight:600;cursor:pointer;width:calc(100%-32px);display:block;text-align:center;}
+
+/* ── PDF PREVIEW CARD ── */
+.pv-card{background:#100804;border:0.5px solid var(--border2);border-radius:var(--r);overflow:hidden;margin-bottom:12px;}
+.pv-header{background:#1a0f06;padding:14px 16px;border-bottom:0.5px solid var(--border);}
+.pv-animus{font-size:9px;color:var(--or);letter-spacing:.08em;margin-bottom:5px;}
+.pv-title{font-size:19px;font-weight:700;color:var(--tx);margin-bottom:2px;}
+.pv-sub{font-size:11px;color:var(--tx3);}
+.pv-sync{float:right;font-size:13px;font-weight:700;color:var(--or);}
+.pv-sec{padding:13px 16px;border-bottom:0.5px solid var(--border);}
+.pv-sec:last-child{border-bottom:none;}
+.pv-lbl{font-size:9px;color:var(--or);text-transform:uppercase;letter-spacing:.08em;margin-bottom:7px;}
+.pv-tag{display:inline-block;font-size:9px;font-weight:600;padding:2px 7px;border-radius:8px;margin-bottom:5px;}
+.pv-ch-name{font-size:13px;font-weight:600;color:var(--tx);margin-bottom:5px;line-height:1.4;}
+/* Chapter text — full story block */
+.pv-chapter-text{font-size:13px;color:var(--tx2);line-height:1.8;margin-top:8px;}
+.pv-chapter-divider{border:none;border-top:0.5px solid var(--border);margin:10px 0;}
+.pv-workout-block{background:#0a0502;border:0.5px solid var(--border);border-radius:8px;padding:10px 12px;margin-top:8px;}
+.pv-workout-title{font-size:12px;font-weight:600;color:var(--tx);margin-bottom:4px;}
+.pv-workout-desc{font-size:11px;color:var(--tx3);line-height:1.5;white-space:pre-wrap;}
+.pv-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
+.pv-stat{background:#0a0502;border:0.5px solid var(--border);border-radius:8px;padding:8px;}
+.pv-sl{font-size:9px;color:var(--tx3);margin-bottom:3px;}
+.pv-sv{font-size:13px;font-weight:600;color:var(--tx);}
+.pv-sv.highlight{color:var(--or);}
+.pv-notes{font-size:12px;color:var(--tx2);font-style:italic;line-height:1.5;}
+.pv-hist-item{font-size:11px;color:var(--tx3);padding:4px 0;border-bottom:0.5px solid var(--border);line-height:1.4;}
+.pv-footer{padding:10px 16px;background:#07040100;border-top:0.5px solid var(--border);}
+.pv-ft{font-size:9px;color:var(--tx4);}
+
+/* ── AVATAR SVG STYLES ── */
+.ava-wrap{position:relative;}
+</style>
+</head>
+<body>
+
+<!-- AUTH -->
+<div id="auth-screen">
+  <div class="auth-logo">Nada con Ezio</div>
+  <div class="auth-sub">De Florencia a Constantinopla<br>Una sesion a la vez</div>
+  <div class="auth-card">
+    <div class="auth-tabs">
+      <div class="auth-tab on" onclick="authTab('login')">Entrar</div>
+      <div class="auth-tab" onclick="authTab('register')">Registrarse</div>
+    </div>
+    <div id="auth-login">
+      <div class="auth-field"><label>Email</label><input type="email" id="login-email" placeholder="tu@email.com" autocomplete="email"></div>
+      <div class="auth-field"><label>Contrasena</label><input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password"></div>
+      <div class="remember-row"><input type="checkbox" id="remember-me" checked><label for="remember-me">Recordar sesion en este dispositivo</label></div>
+      <button class="auth-btn" onclick="doLogin()">Entrar al Animus</button>
+    </div>
+    <div id="auth-register" style="display:none;">
+      <div class="auth-field"><label>Email</label><input type="email" id="reg-email" placeholder="tu@email.com" autocomplete="email"></div>
+      <div class="auth-field"><label>Contrasena</label><input type="password" id="reg-pass" placeholder="min. 6 caracteres" autocomplete="new-password"></div>
+      <button class="auth-btn" onclick="doRegister()">Crear cuenta</button>
+      <div style="font-size:11px;color:var(--tx4);margin-top:8px;line-height:1.5;">Si ves "rate limit exceeded", espera unos minutos e intentalo de nuevo — Supabase limita los registros por seguridad.</div>
+    </div>
+    <div class="auth-msg" id="auth-msg"></div>
+    <div class="auth-or">— o sin cuenta —</div>
+    <button class="sec-btn" onclick="useLocal()">Usar sin login (datos locales)</button>
+  </div>
+</div>
+
+<!-- ONBOARDING -->
+<div id="onboarding">
+  <div class="ob-card">
+    <div class="ob-title">Bienvenido, Asesino</div>
+    <div class="ob-sub">Elige como configurar tus entrenamientos:</div>
+    <div class="ob-option sel" id="ob-preset" onclick="selectOB('preset')">
+      <h3>Cargar mis entrenos de natacion</h3>
+      <p>Resistencia, Tecnica, Combinado y Tecnica pura — listos para usar.</p>
+    </div>
+    <div class="ob-option" id="ob-blank" onclick="selectOB('blank')">
+      <h3>Empezar desde cero</h3>
+      <p>Sin entrenos predefinidos. Creo los mios cuando quiera.</p>
+    </div>
+    <br>
+    <button class="main-btn" onclick="finishOnboarding()">Empezar aventura</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="app-inner">
+    <div class="left-col">
+      <div class="topbar">
+        <div class="animus-pill"><div class="animus-dot"></div><span class="animus-txt">ANIMUS 2.0 — ACTIVO</span></div>
+        <div class="sync-row">
+          <div><div class="hero-title">Nada con Ezio</div><div class="hero-sub">De Florencia a Constantinopla</div></div>
+          <div><div class="sync-val" id="sync-pct">0%</div><div class="sync-label">sincronizado</div></div>
+        </div>
+        <div class="user-row"><span class="user-email" id="user-email"></span><span class="logout-lnk" onclick="doLogout()">Cerrar sesion</span></div>
+      </div>
+
+      <!-- AVATAR -->
+      <div class="avatar-section">
+        <div class="avatar-svg" id="avatar-wrap"></div>
+        <div class="avatar-info">
+          <div class="avatar-era" id="ava-era">AC II — Florencia</div>
+          <div class="avatar-name">Ezio Auditore da Firenze</div>
+          <div class="avatar-age" id="ava-age">17 anos · Novato</div>
+        </div>
+      </div>
+
+      <div class="map-section">
+        <div class="map-label">Ruta de Ezio</div>
+        <div id="map-wrap"></div>
+        <div class="prog-wrap">
+          <div class="prog-bg"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+          <div class="prog-labels"><span id="prog-left">0 / 75 sesiones</span><span id="prog-right">0 capitulos</span></div>
+        </div>
+      </div>
+      <div class="chapter-card">
+        <span class="game-tag tag-ac2" id="game-tag">Assassin's Creed II</span>
+        <div class="ch-name" id="ch-name">Florencia, 1476</div>
+        <div class="ch-quote" id="ch-quote">Completa tu primer entreno para desbloquear la historia de Ezio.</div>
+      </div>
+      <div class="stats-row">
+        <div class="stat-box"><div class="stat-n" id="s-ses">0</div><div class="stat-l">Sesiones</div></div>
+        <div class="stat-box"><div class="stat-n" id="s-km">0.0</div><div class="stat-l">Km nadados</div></div>
+        <div class="stat-box"><div class="stat-n" id="s-str">0</div><div class="stat-l">Racha sem</div></div>
+      </div>
+    </div>
+
+    <div class="right-col">
+      <div class="tabs">
+        <div class="tab on" onclick="goTab('log')">Registrar</div>
+        <div class="tab" onclick="goTab('hist')">Historial</div>
+        <div class="tab" onclick="goTab('mw')">Mis entrenos</div>
+      </div>
+
+      <div id="view-log" class="view on">
+        <div class="notif" id="notif"></div>
+        <div class="slbl">Entreno de hoy</div>
+        <div class="wgrid" id="wgrid"></div>
+        <div class="slbl">Como te has sentido?</div>
+        <div class="fgrid">
+          <div class="fbtn" data-feel="Destruido" onclick="pickFeel(this)">Destruido</div>
+          <div class="fbtn" data-feel="Regular" onclick="pickFeel(this)">Regular</div>
+          <div class="fbtn" data-feel="Bien" onclick="pickFeel(this)">Bien</div>
+          <div class="fbtn" data-feel="Volando" onclick="pickFeel(this)">Volando</div>
+        </div>
+        <div class="slbl">Horario del entreno</div>
+        <div class="time-row">
+          <div class="time-block"><label>Hora inicio</label><input type="time" id="t-start" onchange="calcPace()"></div>
+          <div class="time-block"><label>Hora fin</label><input type="time" id="t-end" onchange="calcPace()"></div>
+        </div>
+        <div class="pace-chip" id="pace-chip"></div>
+        <div class="field-wrap"><textarea id="notes" rows="2" placeholder="Notas: hombro, algo nuevo, como fue el agua..."></textarea></div>
+        <button class="main-btn" id="log-btn" onclick="doLog()" disabled>Sincronizar memoria</button>
+        <button class="ghost-btn" id="preview-btn" onclick="openPreview(null)" style="display:none;">Ver hoja de memoria</button>
+      </div>
+
+      <div id="view-hist" class="view">
+        <div id="hist-list"></div>
+        <p class="empty-msg" id="hist-empty">Ninguna sesion aun. Al agua!</p>
+      </div>
+
+      <div id="view-mw" class="view">
+        <button class="main-btn" onclick="openNewWorkout()">+ Crear entreno</button>
+        <div id="mw-list"></div>
+        <p class="empty-msg" id="mw-empty">No tienes entrenos guardados aun.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CUSTOM WORKOUT MODAL -->
+<div class="overlay" id="custom-modal">
+  <div class="modal">
+    <div class="modal-title">Entreno de hoy <span class="modal-close" onclick="closeCustom()">×</span></div>
+    <div class="slbl" style="margin-bottom:6px;">Nombre</div>
+    <div class="field-wrap"><input type="text" id="c-name" placeholder="Ej: Series largas con paletas" autocomplete="off"></div>
+    <div class="slbl" style="margin-bottom:6px;">Distancia (metros)</div>
+    <div class="field-wrap"><input type="number" id="c-dist" placeholder="Ej: 2200" min="100" max="20000"></div>
+    <div class="slbl" style="margin-bottom:6px;">Descripcion del entreno</div>
+    <textarea id="c-desc" rows="4" placeholder="Ej:&#10;250 suave&#10;4x100 Tecnica&#10;3x500 ritmo comodo&#10;200 suave"></textarea>
+    <div class="remember-row" style="margin-bottom:14px;">
+      <input type="checkbox" id="save-workout" checked>
+      <label for="save-workout">Guardar para usar en el futuro</label>
+    </div>
+    <button class="main-btn" onclick="confirmCustom()">Usar este entreno hoy</button>
+  </div>
+</div>
+
+<!-- NEW WORKOUT MODAL -->
+<div class="overlay" id="new-workout-modal">
+  <div class="modal">
+    <div class="modal-title">Nuevo entreno <span class="modal-close" onclick="closeNewWorkout()">×</span></div>
+    <div class="slbl" style="margin-bottom:6px;">Nombre</div>
+    <div class="field-wrap"><input type="text" id="nw-name" placeholder="Ej: Resistencia larga" autocomplete="off"></div>
+    <div class="slbl" style="margin-bottom:6px;">Distancia habitual (metros)</div>
+    <div class="field-wrap"><input type="number" id="nw-dist" placeholder="Ej: 2500" min="100" max="20000"></div>
+    <div class="slbl" style="margin-bottom:6px;">Descripcion</div>
+    <textarea id="nw-desc" rows="5" placeholder="Ej:&#10;250 suave&#10;4x100 Tecnica&#10;3x500 ritmo comodo&#10;200 suave"></textarea>
+    <button class="main-btn" onclick="saveNewWorkout()">Guardar entreno</button>
+  </div>
+</div>
+
+<!-- PDF PREVIEW -->
+<div class="pdf-overlay" id="pdf-overlay">
+  <div class="pdf-topbar">
+    <span class="pdf-topbar-title">Hoja de memoria</span>
+    <span class="pdf-close" onclick="closePDF()">×</span>
+  </div>
+  <div class="pdf-scroll" id="pdf-scroll"></div>
+  <button class="pdf-dl" onclick="downloadPDF()" style="margin:0 16px 16px;">Descargar PDF</button>
+</div>
+
+<script>
+// ── CONFIG ──────────────────────────────────────────────────
+const SUPABASE_URL='TU_SUPABASE_URL';
+const SUPABASE_KEY='TU_SUPABASE_ANON_KEY';
+let sb=null;
+try{
+  if(SUPABASE_URL!=='TU_SUPABASE_URL'){
+    sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,storageKey:'ezio_auth'}});
+  }
+}catch(e){console.warn('Supabase init error',e);}
+
+// ── AVATAR DEFINITIONS ──────────────────────────────────────
+// Three distinct SVG avatars: young Ezio (AC2), adult (Brotherhood), elder (Revelations)
+function getAvatarSVG(era){
+  if(era==='rev'){
+    // Elder Ezio - white hair, beard, hood
+    return`<svg viewBox="0 0 72 72" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="36" cy="36" r="36" fill="#1a0f06"/>
+      <!-- hood -->
+      <ellipse cx="36" cy="20" rx="20" ry="16" fill="#2a1a0a"/>
+      <path d="M16 28 Q18 14 36 10 Q54 14 56 28 L58 50 Q50 62 36 65 Q22 62 14 50 Z" fill="#241408"/>
+      <!-- hood shadow -->
+      <path d="M22 22 Q28 18 36 18 Q44 18 50 22 L52 30 Q44 26 36 26 Q28 26 20 30 Z" fill="#1a0e05"/>
+      <!-- face -->
+      <ellipse cx="36" cy="40" rx="13" ry="14" fill="#c8956a"/>
+      <!-- white beard -->
+      <path d="M25 46 Q28 56 36 58 Q44 56 47 46 Q44 50 36 52 Q28 50 25 46Z" fill="#e8e0d0"/>
+      <!-- white moustache -->
+      <path d="M28 44 Q32 46 36 45 Q40 46 44 44 Q40 43 36 43 Q32 43 28 44Z" fill="#e8e0d0"/>
+      <!-- eyes aged -->
+      <ellipse cx="30" cy="38" rx="2.5" ry="2" fill="#3a2010"/>
+      <ellipse cx="42" cy="38" rx="2.5" ry="2" fill="#3a2010"/>
+      <!-- scar -->
+      <path d="M33 34 L35 40" stroke="#a06040" stroke-width="0.8" fill="none"/>
+      <!-- Assassin symbol on hood -->
+      <path d="M36 14 L34 20 L36 19 L38 20 Z" fill="#D85A30" opacity="0.8"/>
+    </svg>`;
+  } else if(era==='bro'){
+    // Adult Ezio - stubble, cape, confident
+    return`<svg viewBox="0 0 72 72" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="36" cy="36" r="36" fill="#1a0f06"/>
+      <!-- white hood -->
+      <ellipse cx="36" cy="18" rx="19" ry="15" fill="#f0e8d8"/>
+      <path d="M17 26 Q20 12 36 8 Q52 12 55 26 L57 48 Q50 62 36 64 Q22 62 15 48 Z" fill="#e8dfc8"/>
+      <!-- red inner hood -->
+      <path d="M24 22 Q30 18 36 18 Q42 18 48 22 L50 30 Q44 27 36 27 Q28 27 22 30 Z" fill="#8B2010"/>
+      <!-- face -->
+      <ellipse cx="36" cy="40" rx="13" ry="13" fill="#c8956a"/>
+      <!-- stubble -->
+      <ellipse cx="36" cy="46" rx="8" ry="5" fill="#a07050" opacity="0.4"/>
+      <!-- eyes determined -->
+      <ellipse cx="30" cy="38" rx="2.5" ry="2" fill="#2a1008"/>
+      <ellipse cx="42" cy="38" rx="2.5" ry="2" fill="#2a1008"/>
+      <ellipse cx="30.5" cy="37.5" rx="0.8" ry="0.8" fill="#fff" opacity="0.6"/>
+      <ellipse cx="42.5" cy="37.5" rx="0.8" ry="0.8" fill="#fff" opacity="0.6"/>
+      <!-- slight frown scar -->
+      <path d="M33 35 L35 39" stroke="#9a6040" stroke-width="0.8" fill="none"/>
+      <!-- Assassin symbol -->
+      <path d="M36 12 L34 18 L36 17 L38 18 Z" fill="#D85A30"/>
+    </svg>`;
+  } else {
+    // Young Ezio AC2 - no beard, bright eyes, regular hood
+    return`<svg viewBox="0 0 72 72" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="36" cy="36" r="36" fill="#1a0f06"/>
+      <!-- dark hood -->
+      <ellipse cx="36" cy="20" rx="18" ry="14" fill="#2a1a0e"/>
+      <path d="M18 28 Q22 14 36 10 Q50 14 54 28 L56 50 Q48 63 36 65 Q24 63 16 50 Z" fill="#231608"/>
+      <!-- face young -->
+      <ellipse cx="36" cy="41" rx="13" ry="13" fill="#d4a070"/>
+      <!-- no beard, smooth -->
+      <!-- eyes bright young -->
+      <ellipse cx="30" cy="38" rx="2.8" ry="2.2" fill="#2a1008"/>
+      <ellipse cx="42" cy="38" rx="2.8" ry="2.2" fill="#2a1008"/>
+      <ellipse cx="30.8" cy="37.4" rx="1" ry="1" fill="#fff" opacity="0.7"/>
+      <ellipse cx="42.8" cy="37.4" rx="1" ry="1" fill="#fff" opacity="0.7"/>
+      <!-- slight smile -->
+      <path d="M31 45 Q36 48 41 45" stroke="#b07850" stroke-width="1" fill="none" stroke-linecap="round"/>
+      <!-- Assassin symbol small -->
+      <path d="M36 13 L34.5 18 L36 17 L37.5 18 Z" fill="#D85A30" opacity="0.9"/>
+    </svg>`;
+  }
+}
+
+function getAvatarInfo(n){
+  if(n>=51){return{era:'rev',eraLabel:'AC Revelations — Constantinopla',age:'52 anos · Maestro Mayor'};}
+  if(n>=31){return{era:'bro',eraLabel:'AC Brotherhood — Roma',age:'36 anos · Maestro Asesino'};}
+  return{era:'ac2',eraLabel:'AC II — Italia',age:'17-21 anos · Asesino en formacion'};}
+
+// ── STORY 75 fragments ───────────────────────────────────────
+const STORY=[
+  {game:'AC II',tag:'tag-ac2',title:'Florencia, 1476 — El dia que cambio todo',
+   summary:'Giovanni Auditore es arrestado. Ezio aun no lo sabe.',
+   text:'Giovanni Auditore es arrestado al amanecer. Ezio, de 17 anos, aun no lo sabe. Juega a las cartas, rie con sus amigos. Esta es la ultima manana en que el mundo tiene sentido para el.\n\nHoy tu tambien das el primer paso sin saber exactamente adonde lleva. La historia de Ezio empieza aqui. La tuya tambien.'},
+  {game:'AC II',tag:'tag-ac2',title:'La noche de la ejecucion',
+   summary:'Ezio ve morir a su padre. Toma una decision sin palabras.',
+   text:'Ezio ve morir a su padre y a sus hermanos desde la multitud. No llora. Algo dentro de el se congela y se endurece al mismo tiempo. Esa noche huye con su madre y su hermana.\n\nToma una decision sin palabras: seguira adelante. Tu segunda sesion. Ya no eres principiante.'},
+  {game:'AC II',tag:'tag-ac2',title:'La fuga — Florencia en llamas',
+   summary:'Ezio corre sin saber trepar bien. El movimiento es lo unico que tiene.',
+   text:'Ezio corre por los tejados de Florencia con su familia a cuestas. No sabe trepar bien, no sabe pelear bien. Pero no para.\n\nEl movimiento es lo unico que tiene. Tu tercer entreno. El cuerpo empieza a recordar como se mueve.'},
+  {game:'AC II',tag:'tag-ac2',title:'La carta de Giovanni',
+   summary:'Un legado que llega antes de estar listos para recibirlo.',
+   text:'Antes de morir, Giovanni le dejo a Ezio una carta y un cofre. Ezio no entiende aun lo que significa. Solo sabe que su padre confiaba en el.\n\nA veces el legado llega antes de que estemos listos para recibirlo. El tuyo en el agua es cada largo que completas.'},
+  {game:'AC II',tag:'tag-ac2',title:'Monteriggioni — La Villa Auditore',
+   summary:'Primera semana. El tio Mario: "Bienvenido a la familia."',
+   text:'"Bienvenido a la familia." El tio Mario recibe a Ezio en la villa. Es enorme, antigua, llena de historia. Ezio la mira sin comprender que este lugar sera su base durante anos.\n\nPrimera semana completada. Ya tienes una base tambien.'},
+  {game:'AC II',tag:'tag-ac2',title:'El primer entrenamiento con Mario',
+   summary:'Aparecer cada manana es el ochenta por ciento.',
+   text:'Mario entrena a Ezio cada dia. Le ensenha a moverse de forma diferente, a ver el entorno como una red de caminos. Ezio protesta, se queja, pero aparece cada manana.\n\nAparecer es el ochenta por ciento. Ya lo estas haciendo.'},
+  {game:'AC II',tag:'tag-ac2',title:'La armadura del Asesino',
+   summary:'La capa, el guante oculto. No es un disfraz. Es una promesa.',
+   text:'Ezio recibe por primera vez la ropa del Asesino. La capa, el guante oculto. No es un disfraz. Es una promesa.\n\nCuando te pones el bano, algo cambia tambien en ti. El ritual del entrenamiento te convierte en otra persona dentro del agua.'},
+  {game:'AC II',tag:'tag-ac2',title:'San Gimignano — Primera mision',
+   summary:'La belleza y el peligro conviven siempre.',
+   text:'Ezio viaja a San Gimignano para encontrar al primer traidor. La ciudad es bella y hostil al mismo tiempo. Aprende que la belleza y el peligro conviven siempre.\n\nOctava sesion. El agua ya no te resulta extrana.'},
+  {game:'AC II',tag:'tag-ac2',title:'Vieri de Pazzi',
+   summary:'La venganza no llena el vacio que esperaba. Pero sigue.',
+   text:'Ezio elimina a Vieri de Pazzi. No siente alivio, solo un peso que cambia de forma. La venganza no llena el vacio que esperaba. Pero sigue. Porque parar seria peor.\n\nTu novena sesion. Sigue.'},
+  {game:'AC II',tag:'tag-ac2',title:'Florencia — La ciudad de los Medici',
+   summary:'Diez sesiones. La ciudad es la misma pero el ya no.',
+   text:'Ezio vuelve a Florencia. La ciudad es la misma pero el ya no. Camina por las mismas calles de otra forma: mas alto, mas atento, mas consciente.\n\nDiez sesiones. Llevas casi tres semanas. Algo ha cambiado en tu cuerpo aunque no lo veas aun.'},
+  {game:'AC II',tag:'tag-ac2',title:'Leonardo da Vinci',
+   summary:'Leonardo ve algo en Ezio que Ezio aun no ve en si mismo.',
+   text:'Ezio conoce a Leonardo. El inventor le moderniza las armas, le da el guante de doble hoja. Leonardo mira a Ezio con curiosidad genuina: ve algo en el que Ezio aun no ve en si mismo.\n\nEl entrenamiento te esta cambiando aunque no lo notes aun.'},
+  {game:'AC II',tag:'tag-ac2',title:'El taller de Leonardo',
+   summary:'La mente y el cuerpo son lo mismo.',
+   text:'Leonardo y Ezio hablan horas. "La mente y el cuerpo son lo mismo, que entrenar uno es entrenar el otro." Ezio escucha sin entender del todo.\n\nTu lo estas entendiendo en el agua. Cada sesion es trabajo mental tanto como fisico.'},
+  {game:'AC II',tag:'tag-ac2',title:'Venecia — La ciudad sobre el agua',
+   summary:'Sin suelo firme, pero en pie desde hace siglos.',
+   text:'Ezio llega a Venecia por primera vez. Los canales, las gondolas, los puentes. Una ciudad que no tiene suelo firme pero se mantiene en pie desde hace siglos.\n\nComo tu: sin base perfecta, sin condicion fisica perfecta, pero aguantando. Sesion a sesion.'},
+  {game:'AC II',tag:'tag-ac2',title:'El Carnaval de Venecia',
+   summary:'A veces el mejor disfraz es la confianza.',
+   text:'El Carnaval llena Venecia de mascaras. Ezio aprende a moverse entre multitudes, a ser invisible siendo evidente. A veces el mejor disfraz es la confianza.\n\nTu decimocuarta sesion. Ya tienes mas confianza en el agua que el primer dia.'},
+  {game:'AC II',tag:'tag-ac2',title:'Antonio y los ladrones',
+   summary:'Un mes de trabajo continuo. Nadie llega solo.',
+   text:'Ezio se alia con Antonio, el lider de los ladrones de Venecia. Aprende que los aliados vienen de donde menos esperas. Nadie llega solo a ningun sitio que valga la pena.\n\nQuince sesiones. Un mes de trabajo continuo. Eso es real.'},
+  {game:'AC II',tag:'tag-ac2',title:'Los tejados de Venecia',
+   summary:'Cuando encuentras el ritmo, todo parece mas facil.',
+   text:'Ezio corre por los tejados de Venecia de noche. La ciudad desde arriba es otro mundo. Todo parece posible.\n\nEl agua tiene eso tambien: cuando encuentras el ritmo de brazada, cuando la respiracion encaja, todo parece mas facil. Lo estas encontrando.'},
+  {game:'AC II',tag:'tag-ac2',title:'Emilio Barbarigo',
+   summary:'El entrenamiento se nota. El tuyo tambien.',
+   text:'Ezio neutraliza a Emilio Barbarigo. La mision es limpia, precisa. Ezio ya no es el mismo chico torpe de Florencia.\n\nEl entrenamiento se nota. El tuyo tambien: en los hombros, en la respiracion, en como te mueves dentro y fuera del agua.'},
+  {game:'AC II',tag:'tag-ac2',title:'La traicion dentro de la traicion',
+   summary:'El camino es largo. Pero ya no asusta la distancia.',
+   text:'Ezio descubre que hay mas conspiradores de lo que creia. La lista es larga. El camino tambien. Pero ya no le asusta la distancia.\n\nLe asusta menos cada dia. Como a ti el agua, que al principio pesaba y ahora es tu espacio.'},
+  {game:'AC II',tag:'tag-ac2',title:'Marco Barbarigo',
+   summary:'La paciencia es tan importante como la velocidad.',
+   text:'Marco Barbarigo cae. Ezio lo hace desde una gondola, durante una fiesta. Nadie lo ve venir. La paciencia es tan importante como la velocidad.\n\nDiecinueve sesiones. La paciencia contigo mismo en el agua es lo que mas entrenas.'},
+  {game:'AC II',tag:'tag-ac2',title:'La Serenissima',
+   summary:'Veinte sesiones. La serenidad no es ausencia de esfuerzo.',
+   text:'Venecia se llama La Serenissima: la muy serena. Ezio aprende que la serenidad no es ausencia de esfuerzo, sino presencia de proposito.\n\nVeinte sesiones. Llevas mas de un mes y medio. Eso ya no es un comienzo: eso es un habito.'},
+  {game:'AC II',tag:'tag-ac2',title:'Hacia Roma — El camino al Papa',
+   summary:'Los objetivos grandes se dividen en pasos.',
+   text:'Ezio sabe que el hilo lleva a Rodrigo Borgia, el Papa. Es el objetivo mas grande que ha imaginado. Pero ya no tiene miedo de los objetivos grandes. Los divide en pasos.\n\nComo tu con cada largo. Como tu con cada sesion de una serie mas larga.'},
+  {game:'AC II',tag:'tag-ac2',title:'La Secta de los Templarios',
+   summary:'El enemigo real siempre es mas grande de lo que parece.',
+   text:'Ezio comprende el cuadro completo: los Pazzi eran solo herramientas. Los Templarios son la mano que los mueve.\n\nEl enemigo real siempre es mas grande de lo que parece al principio. El de Ezio eran los Templarios. El tuyo era el sofa, y ya lo estas ganando.'},
+  {game:'AC II',tag:'tag-ac2',title:'El Codice de Altair',
+   summary:'"El limite esta en tu mente, no en tu cuerpo."',
+   text:'Mario le muestra a Ezio las paginas del Codice de Altair, el primer gran Asesino. Sus palabras tienen siglos pero suenan actuales.\n\n"El limite esta en tu mente, no en tu cuerpo." Veintitres sesiones. Llevas un mes y medio. El limite ya lo estas empujando.'},
+  {game:'AC II',tag:'tag-ac2',title:'El asalto al Vaticano',
+   summary:'Ha llegado tan lejos que solo calcula el siguiente paso.',
+   text:'Ezio se infiltra en el Vaticano. La fortaleza mas protegida de Europa. Va solo. Ha llegado tan lejos que ya no calcula el riesgo, solo el siguiente paso.\n\nVeinticuatro sesiones. Solo el siguiente largo. Solo la siguiente semana.'},
+  {game:'AC II',tag:'tag-ac2',title:'Rodrigo Borgia — El Papa Templario',
+   summary:'Veinticinco sesiones. Hay sabiduria que el Ezio de Florencia no habria tenido.',
+   text:'"He trabajado toda mi vida para esto!" Borgia grita cuando Ezio lo confronta. Ezio podria matarlo. Elige no hacerlo. Hay sabiduria en esa decision que el Ezio de Florencia no habria tenido.\n\nVeinticinco sesiones. Tu tambien eres diferente al que entro al agua el primer dia.'},
+  {game:'AC II',tag:'tag-ac2',title:'La Camara del Precursor',
+   summary:'A veces entrenar te lleva a descubrir cosas que no esperabas.',
+   text:'Bajo el Vaticano hay una camara antigua. Ezio la abre con el Fruto del Eden. Lo que encuentra dentro cambia todo lo que creia saber.\n\nA veces entrenar te lleva a descubrir cosas sobre ti mismo que no esperabas. Sobre tu resistencia, sobre tu mente.'},
+  {game:'AC II',tag:'tag-ac2',title:'Minerva habla',
+   summary:'Hay cosas que hacemos cuyos frutos no veremos de inmediato.',
+   text:'"No somos dioses, Ezio. Somos como tu." Minerva le da un mensaje que no es para el: es para alguien en el futuro. Ezio lo acepta sin entenderlo del todo.\n\nHay cosas que hacemos cuyos frutos no veremos de inmediato. Cada sesion planta algo.'},
+  {game:'AC II',tag:'tag-ac2',title:'El regreso a Monteriggioni',
+   summary:'Solo silencio y una calma que no habia sentido antes.',
+   text:'Ezio vuelve a la villa. Ha completado lo que creia imposible hace tres anos. Se sienta en el jardin al atardecer. No hay celebracion, solo silencio y una calma que no habia sentido antes.\n\nVeintiocho sesiones. Conoces ese silencio al salir del agua.'},
+  {game:'AC II',tag:'tag-ac2',title:'Una nueva generacion',
+   summary:'Lo que has acumulado ya no es solo tuyo.',
+   text:'Ezio empieza a entrenar a otros. Se da cuenta de que lo que ha acumulado ya no es solo suyo. El conocimiento se comparte.\n\nEl conocimiento que ganas en el agua tampoco es solo tuyo. Cambia como te mueves, como descansas, como te ves.'},
+  {game:'AC II',tag:'tag-ac2',title:'AC II completado — El maestro joven',
+   summary:'Treinta sesiones. Ezio sale siendo algo diferente.',
+   text:'Ezio Auditore tiene 21 anos. Entro en esto siendo un chico impulsivo buscando venganza. Sale siendo algo diferente: un Asesino, si, pero tambien un hombre que entiende que hay algo mas grande que el.\n\nTreinta sesiones. Lo has conseguido. Empieza Brotherhood.'},
+  {game:'Brotherhood',tag:'tag-bro',title:'Roma, 1499 — El ataque',
+   summary:'Sesion 31. Todo lo construido en ruinas en una noche.',
+   text:'Todo empieza de noche. Cesare Borgia ataca Monteriggioni con un ejercito. En horas, lo que Ezio habia construido durante anos esta en ruinas. Su tio Mario muere. La villa cae. Ezio huye herido.\n\nLa sesion 31 empieza Brotherhood. Un nuevo capitulo, una nueva ciudad, una nueva version de Ezio.'},
+  {game:'Brotherhood',tag:'tag-bro',title:'La herida',
+   summary:'Volver al lugar donde todo se rompio para repararlo.',
+   text:'Ezio se recupera de sus heridas en Roma. La ciudad que fue el corazon del poder enemigo ahora es donde tiene que reconstruirse.\n\nHay algo poetico en eso: volver al lugar donde todo se rompio para repararlo. A veces el progreso parece un retroceso antes de serlo.'},
+  {game:'Brotherhood',tag:'tag-bro',title:'Roma corrupta',
+   summary:'Cuenta los pasos. No se acobarda.',
+   text:'Roma esta dominada por los Borgia. Torres de control en cada barrio, soldados en cada esquina. El pueblo vive con miedo. Ezio camina por la ciudad y ve el trabajo que queda por hacer.\n\nNo se acobarda. Cuenta los pasos. Treinta y tres sesiones.'},
+  {game:'Brotherhood',tag:'tag-bro',title:'La Hermandad de los Asesinos',
+   summary:'Personas que han perdido algo, que tienen rabia convertida en proposito.',
+   text:'Ezio decide que no puede hacerlo solo esta vez. Recluta a los primeros miembros de la nueva Hermandad. Personas que han perdido algo, que tienen rabia convertida en proposito. Como el.\n\nNadie llega solo a ningun sitio que valga la pena.'},
+  {game:'Brotherhood',tag:'tag-bro',title:'Las torres de los Borgia',
+   summary:'Treinta y cinco sesiones. Cada brazada te devuelve algo.',
+   text:'Ezio empieza a eliminar las torres de control, una a una. Cada torre que cae devuelve un barrio al pueblo. Cada una es una victoria pequena que construye algo grande.\n\nCada brazada te devuelve algo tambien. Treinta y cinco sesiones.'},
+  {game:'Brotherhood',tag:'tag-bro',title:'Machiavelo',
+   summary:'"El fin justifica los medios." Los dos tienen razon a medias.',
+   text:'Ezio conoce a Niccolo Machiavelo. El filosofo le dice cosas que incomodan pero que tienen sentido. Ezio no esta de acuerdo con todo. Los dos tienen razon a medias.\n\nComo casi siempre. La verdad del entrenamiento tambien esta a medias: el cuerpo y la mente.'},
+  {game:'Brotherhood',tag:'tag-bro',title:'Claudia, la hermana',
+   summary:'La fuerza tiene muchas formas.',
+   text:'Claudia, la hermana de Ezio, lidera un grupo que recopila informacion vital. Ezio aprende que la fuerza tiene muchas formas y que las subestimas hasta que las necesitas.\n\nLa tuya en el agua cada dia es una de ellas. Treinta y siete sesiones.'},
+  {game:'Brotherhood',tag:'tag-bro',title:'La guarida de los Asesinos',
+   summary:'El liderazgo no sustituye al trabajo propio.',
+   text:'La Hermandad crece. La guarida bajo Roma se llena de voces, planes, mapas. Ezio dirige todo esto mientras sigue entrenando cada dia.\n\nEl liderazgo no sustituye al trabajo propio. Treinta y ocho sesiones.'},
+  {game:'Brotherhood',tag:'tag-bro',title:'Caterina Sforza',
+   summary:'A veces reconocemos en otros lo que nos cuesta ver en nosotros mismos.',
+   text:'Caterina Sforza es tan obstinada y feroz como Ezio. A veces reconocemos en otros lo que nos cuesta ver en nosotros mismos.\n\nTu ves en el agua una disciplina que fuera del agua tambien existe. Treinta y nueve sesiones.'},
+  {game:'Brotherhood',tag:'tag-bro',title:'La ingenieria de Leonardo',
+   summary:'Cuarenta sesiones. Hay momentos en que tambien sientes que vuelas.',
+   text:'Leonardo le construye a Ezio el primer planeador de la historia. Ezio vuela sobre Roma al amanecer. Es uno de los momentos mas libres de su vida.\n\nHay momentos en el entrenamiento en que tambien sientes que vuelas. Cuarenta sesiones.'},
+  {game:'Brotherhood',tag:'tag-bro',title:'Cesare — El hijo del Papa',
+   summary:'La tuya, enfocada en el agua, es una herramienta.',
+   text:'Cesare Borgia es diferente a todos los enemigos anteriores. Cree genuinamente que tiene derecho al mundo. Ese nivel de conviccion es peligroso cuando apunta hacia fuera.\n\nLa tuya, enfocada en el agua, en mejorar, en aparecer, es una herramienta. Una poderosa.'},
+  {game:'Brotherhood',tag:'tag-bro',title:'El Manzana en manos de Cesare',
+   summary:'Tu trabajas con lo que tienes: cuerpo, agua, voluntad.',
+   text:'Cesare consigue el Artefacto. Ahora tiene un poder que no comprende del todo. Los Templarios siempre quieren mas de lo que pueden manejar.\n\nTu trabajas con lo que tienes: cuerpo, agua, voluntad. Cuarenta y dos sesiones.'},
+  {game:'Brotherhood',tag:'tag-bro',title:'La caida del Papa',
+   summary:'El poder sin limites siempre se vuelve contra quien lo porta.',
+   text:'Rodrigo Borgia muere, envenenado por su propio hijo. El poder sin limites siempre se vuelve contra quien lo porta. Ezio observa sin sentir satisfaccion. La guerra no ha terminado.\n\nCuarenta y tres sesiones.'},
+  {game:'Brotherhood',tag:'tag-bro',title:'La batalla de Viana',
+   summary:'"Un hombre que dice que no puede morir ya esta muerto."',
+   text:'"Nadie puede matarme!", grita Cesare. "Un hombre que dice eso", responde Ezio, "ya esta muerto." La arrogancia siempre tiene la misma forma.\n\nCuarenta y cuatro sesiones. Tu arrogancia tambien desaparecio: ahora el agua te respeta porque tu la respetas.'},
+  {game:'Brotherhood',tag:'tag-bro',title:'La caida de Cesare Borgia',
+   summary:'La arrogancia siempre cae.',
+   text:'Cesare cae desde las murallas de Viana. El hombre que destruyo Monteriggioni, que mato al tio Mario, que domino Roma, termina en una ciudad que nadie pone en los mapas.\n\nLa arrogancia siempre cae. Cuarenta y cinco sesiones.'},
+  {game:'Brotherhood',tag:'tag-bro',title:'Roma liberada',
+   summary:'Ezio tiene 35 anos. La mitad de su vida adulta en esto.',
+   text:'Con Cesare muerto, Roma respira. Las torres de los Borgia son historia. La Hermandad es fuerte. Ezio tiene 35 anos. La mitad de su vida adulta la ha pasado en esto.\n\nCuarenta y seis sesiones. Has pasado meses en esto. Vale la pena.'},
+  {game:'Brotherhood',tag:'tag-bro',title:'El Manzana escondido',
+   summary:'Algunas victorias consisten en no usar lo que podrias usar.',
+   text:'Ezio esconde el Manzana bajo Santa Maria in Aracoeli. Entierra el poder que tanto buscaron los Templarios. Algunas victorias consisten en no usar lo que podrias usar.\n\nCuarenta y siete sesiones.'},
+  {game:'Brotherhood',tag:'tag-bro',title:'Desmond despierta',
+   summary:'Los habitos que construyes dejan marca en quien los construye.',
+   text:'En el presente, Desmond Miles sale del Animus. Ha vivido toda la vida de Ezio en su mente. Algo de Ezio ha quedado en el: una postura, una calma, una forma de ver el peligro.\n\nLos habitos que construyes dejan marca. Cuarenta y ocho sesiones.'},
+  {game:'Brotherhood',tag:'tag-bro',title:'La Hermandad en pie',
+   summary:'El exito real es que lo que creas sobreviva tu presencia.',
+   text:'Ezio deja Roma en manos de la Hermandad. Ha pasado anos construyendo algo que puede funcionar sin el. Eso es el exito real: que lo que creas sobreviva tu presencia.\n\nCuarenta y nueve sesiones.'},
+  {game:'Brotherhood',tag:'tag-bro',title:'Brotherhood completado — El Maestro',
+   summary:'Cincuenta sesiones. Ha aprendido que reconstruir es mas valioso que destruir.',
+   text:'Ezio Auditore tiene 36 anos. Ha pasado de joven vengativo a lider de una organizacion. Ha perdido una villa y ha liberado una ciudad. Ha aprendido que reconstruir es mas dificil y mas valioso que destruir.\n\nCincuenta sesiones. Empieza Revelations.'},
+  {game:'Revelations',tag:'tag-rev',title:'Constantinopla, 1511 — El ultimo viaje',
+   summary:'Cincuenta y una sesiones. Ezio tiene 52 anos y sigue.',
+   text:'Ezio tiene 52 anos. Llega a Constantinopla en barco, con el cabello blanco en las sienes y cicatrices que no se ven. No viene a conquistar: viene a entender. A encontrar las respuestas que le quedan.\n\nCincuenta y una sesiones. Tu tambien buscas algo en el agua.'},
+  {game:'Revelations',tag:'tag-rev',title:'La ciudad del estrecho',
+   summary:'La incomodidad de lo nuevo ya no le asusta.',
+   text:'Constantinopla une Europa y Asia. Ezio camina por el Gran Bazar y escucha idiomas que no entiende. La incomodidad de lo nuevo no le asusta ya.\n\nCincuenta y dos sesiones. El agua ya tampoco te asusta como al principio.'},
+  {game:'Revelations',tag:'tag-rev',title:'Yusuf Tazim',
+   summary:'La sabiduria no tiene direccion unica.',
+   text:'"En Constantinopla hacemos las cosas diferente, Mentor." Yusuf Tazim recibe a Ezio con humor y respeto en partes iguales. Ezio aprende de alguien mas joven que el.\n\nLa sabiduria no tiene direccion unica. Cincuenta y tres sesiones.'},
+  {game:'Revelations',tag:'tag-rev',title:'La biblioteca de Altair',
+   summary:'El pasado le ensenha al presente lo que el presente aun no sabe.',
+   text:'Ezio busca las cinco llaves que abren la biblioteca de Altair en Masyaf. Cada llave es un recuerdo del primer Maestro Asesino. El pasado le ensenha al presente lo que el presente aun no sabe.\n\nCincuenta y cuatro sesiones.'},
+  {game:'Revelations',tag:'tag-rev',title:'Los jenizaros',
+   summary:'Respetar a los obstaculos competentes es mas honesto que despreciarlos.',
+   text:'Los jenizaros, la guardia de elite del sultan, son el obstaculo constante. Ezio los esquiva, los neutraliza, los respeta. Respetar a los enemigos competentes es mas honesto que despreciarlos.\n\nCincuenta y cinco sesiones.'},
+  {game:'Revelations',tag:'tag-rev',title:'Sofia Sartor',
+   summary:'La vida tiene capas. Cincuenta y seis sesiones.',
+   text:'Ezio conoce a Sofia Sartor en su libreria. Una veneciana en Constantinopla, rodeada de libros. Ezio, que lleva decadas rodeado de armas, se encuentra hablando de literatura durante horas.\n\nLa vida tiene capas que solo se revelan cuando dejas de correr. Cincuenta y seis sesiones.'},
+  {game:'Revelations',tag:'tag-rev',title:'Los recuerdos de Altair — Joven',
+   summary:'Ve cuanto ha cambiado y cuanto tardaron los cambios.',
+   text:'La primera llave revela a Altair joven, arrogante, cometiendo un error que le cuesta su rango. Ezio reconoce al chico impulsivo que el mismo fue.\n\nVe cuanto ha cambiado y cuanto tardaron los cambios en llegar. Los tuyos en el agua tambien llevan su tiempo. Cincuenta y siete sesiones.'},
+  {game:'Revelations',tag:'tag-rev',title:'Principe Suleiman',
+   summary:'La mejor educacion es la que no parece educacion.',
+   text:'Ezio se gana la confianza del joven principe Suleiman, futuro Suleiman el Magnifico. Le da consejo sin darselo directamente. La mejor educacion es la que no parece educacion.\n\nCincuenta y ocho sesiones.'},
+  {game:'Revelations',tag:'tag-rev',title:'El asedio de Masyaf',
+   summary:'Lugares que fueron importantes guardan algo aunque esten vacios.',
+   text:'Ezio viaja a Masyaf, la antigua fortaleza de Altair. Esta tomada por Templarios. La reconquista. Dentro hay silencio, polvo, historia.\n\nLugares que fueron importantes guardan algo aunque esten vacios. El agua guarda todo lo que has trabajado. Cincuenta y nueve sesiones.'},
+  {game:'Revelations',tag:'tag-rev',title:'Los recuerdos de Altair — La traicion',
+   summary:'Hay heridas que los siglos no curan pero que tampoco impiden seguir.',
+   text:'Segunda llave: Altair ve como su mentor Al Mualim era Templario. La traicion del maestro. Ezio la vive como propia.\n\nHay heridas que los siglos no curan pero que tampoco impiden seguir. Sesenta sesiones.'},
+  {game:'Revelations',tag:'tag-rev',title:'Ahmet, el Templario',
+   summary:'Las cosas importantes no se descubren de golpe, sino capa a capa.',
+   text:'El principe Ahmet es el lider Templario oculto. Ezio lo descubre despacio, como se descubren las cosas importantes. No de golpe, sino capa a capa.\n\nSesenta sesiones. Tu condicion fisica tambien se descubrio asi: capa a capa.'},
+  {game:'Revelations',tag:'tag-rev',title:'Los recuerdos de Altair — El exilio',
+   summary:'La dignidad no depende del reconocimiento externo.',
+   text:'Tercera llave: Altair es exiliado por salvar a su familia. Pierde el rango, la posicion, el respeto. Acepta el castigo y trabaja desde el exilio durante anos.\n\nLa dignidad no depende del reconocimiento externo. Sesenta y una sesiones.'},
+  {game:'Revelations',tag:'tag-rev',title:'Sofia en peligro',
+   summary:'La vida personal vuelve a tener peso.',
+   text:'Los Templarios secuestran a Sofia para presionar a Ezio. El siente algo que no ha sentido en anos: miedo por alguien concreto, no por una causa abstracta. La vida personal vuelve a tener peso.\n\nSesenta y dos sesiones.'},
+  {game:'Revelations',tag:'tag-rev',title:'Los recuerdos de Altair — El regreso',
+   summary:'No hay retiro para quien ama lo que hace.',
+   text:'Cuarta llave: Altair regresa a Masyaf. Con 92 anos. Recupera la Orden, graba sus conocimientos en el Codice. Trabaja hasta el ultimo dia.\n\nNo hay retiro para quien ama lo que hace. Sesenta y tres sesiones.'},
+  {game:'Revelations',tag:'tag-rev',title:'La batalla del Bosoro',
+   summary:'A los 52 anos, la experiencia vale mas que la velocidad.',
+   text:'Ezio persigue a Ahmet por el Bosoro. La batalla final entre los dos. Ezio gana no por fuerza sino por experiencia.\n\nA los 52 anos, la experiencia vale mas que la velocidad. Tu experiencia en el agua crece cada semana. Sesenta y cinco sesiones.'},
+  {game:'Revelations',tag:'tag-rev',title:'El sultan Bayezid',
+   summary:'Saber cuando no actuar es la leccion mas dificil.',
+   text:'El propio sultan Bayezid ejecuta a su hijo Ahmet. La justicia toma formas que nadie controla. Ezio observa y no interviene.\n\nSaber cuando no actuar es la leccion mas dificil. El descanso tambien es parte del entrenamiento. Sesenta y seis sesiones.'},
+  {game:'Revelations',tag:'tag-rev',title:'La ultima llave — Altair se despide',
+   summary:'Muere en paz, habiendo hecho todo lo que podia hacer.',
+   text:'Quinta llave: Altair, con 92 anos, entra solo en la biblioteca. Se sienta con el Manzana. Cierra los ojos. Muere en paz, habiendo hecho todo lo que podia hacer. Ezio llora.\n\nSesenta y siete sesiones.'},
+  {game:'Revelations',tag:'tag-rev',title:'La biblioteca de Altair abierta',
+   summary:'"Esta no es una tumba, sino un mensajero."',
+   text:'Ezio abre la biblioteca. Dentro no hay tesoros ni armas. Solo el cuerpo de Altair y un mensaje. "Esta no es una tumba, sino un mensajero." El conocimiento es el legado.\n\nSesenta y ocho sesiones.'},
+  {game:'Revelations',tag:'tag-rev',title:'El mensaje de Ezio a Desmond',
+   summary:'Que raro suena la palabra paz en su boca.',
+   text:'Ezio habla directamente a Desmond. Le dice que ha vivido su vida siendo herramienta de algo mas grande. Le desea que encuentre respuestas. Y paz.\n\nQue raro suena la palabra paz en su boca. Sesenta y nueve sesiones.'},
+  {game:'Revelations',tag:'tag-rev',title:'El retiro — Sofia y Ezio',
+   summary:'Duerme bien por primera vez en decadas.',
+   text:'Ezio deja la Orden. Se retira a una finca en la Toscana con Sofia. Planta un vinedo. Escribe. Duerme bien por primera vez en decadas.\n\nTu cuerpo tambien esta aprendiendo a descansar bien. Setenta sesiones.'},
+  {game:'Revelations',tag:'tag-rev',title:'La carta a Claudia',
+   summary:'"Ahora quiero ser simplemente un hombre."',
+   text:'"He sido guerrero, explorador, maestro. Ahora quiero ser simplemente un hombre." La identidad cambia y eso esta bien.\n\nLa tuya tambien. Ya no eres el mismo que entro al agua el primer dia. Setenta y una sesiones.'},
+  {game:'Revelations',tag:'tag-rev',title:'La hija — Flavia',
+   summary:'Se hace lo que se puede mientras se puede.',
+   text:'Ezio y Sofia tienen una hija, Flavia. Ezio la mira dormir y piensa en todo lo que no estara para verla vivir. Pero planta el vinedo de todas formas. Se hace lo que se puede mientras se puede.\n\nSetenta y dos sesiones.'},
+  {game:'Revelations',tag:'tag-rev',title:'Firenze, 1524 — La plaza del mercado',
+   summary:'Muere en paz. En movimiento. Rodeado de vida.',
+   text:'Ezio, con 65 anos, visita Florencia con Sofia y Flavia. Se sienta en una plaza, habla con un viajero desconocido, se rie. Le da un ataque al corazon. Muere en la plaza. En paz.\n\nEn movimiento. Rodeado de vida. Setenta y tres sesiones.'},
+  {game:'Revelations',tag:'tag-rev',title:'Lo que queda',
+   summary:'Dejo una Hermandad, una familia, un legado.',
+   text:'Ezio Auditore da Firenze murio como vivio: en movimiento, entre gente, con el sol en la cara. No en una cama, no en silencio, no solo.\n\nDejo una Hermandad, una familia, un legado. Y una pregunta abierta. Setenta y cuatro sesiones.'},
+  {game:'Revelations',tag:'tag-rev',title:'75 sesiones — La trilogia completada',
+   summary:'Tu has elegido esto. Y eso lo hace real.',
+   text:'Has completado la trilogia de Ezio Auditore. 75 sesiones. Mas de 150 km nadados. Has seguido cuando no tenias ganas. Has aparecido cuando era viernes y estabas agotado.\n\nEzio diria: "Nada es verdad, todo esta permitido." Tu has elegido esto. Y eso lo hace completamente real.'},
+];
+
+// ── MAP CONFIG ───────────────────────────────────────────────
+// Positions carefully spaced to avoid overlap on any screen size
+const MAP_CITIES=[
+  {name:'Florencia',      rx:0.14, ry:0.72},
+  {name:'Monteriggioni',  rx:0.28, ry:0.86},
+  {name:'Venecia',        rx:0.34, ry:0.28},
+  {name:'Roma',           rx:0.40, ry:0.88},
+  {name:'Viana',          rx:0.04, ry:0.82},
+  {name:'Constantinopla', rx:0.72, ry:0.42},
+  {name:'Masyaf',         rx:0.93, ry:0.18},
+];
+const CITY_ORDER=['Florencia','Monteriggioni','Venecia','Roma','Viana','Constantinopla','Masyaf'];
+const MAP_PATH=[
+  ['Florencia','Venecia'],
+  ['Venecia','Monteriggioni'],
+  ['Monteriggioni','Roma'],
+  ['Roma','Viana'],
+  ['Viana','Constantinopla'],
+  ['Constantinopla','Masyaf'],
+];
+const SESSION_CITY=['Florencia','Florencia','Florencia','Florencia','Monteriggioni','Monteriggioni','Monteriggioni','Monteriggioni','Monteriggioni','Florencia','Florencia','Florencia','Venecia','Venecia','Venecia','Venecia','Venecia','Venecia','Venecia','Venecia','Roma','Roma','Roma','Roma','Roma','Roma','Roma','Roma','Roma','Roma','Roma','Roma','Roma','Roma','Roma','Roma','Roma','Roma','Roma','Roma','Roma','Roma','Roma','Roma','Viana','Viana','Roma','Roma','Roma','Roma','Constantinopla','Constantinopla','Constantinopla','Constantinopla','Constantinopla','Constantinopla','Constantinopla','Constantinopla','Masyaf','Constantinopla','Constantinopla','Masyaf','Constantinopla','Masyaf','Constantinopla','Constantinopla','Masyaf','Masyaf','Masyaf','Masyaf','Masyaf','Masyaf','Masyaf','Masyaf','Masyaf'];
+
+const PRESET_WORKOUTS=[
+  {name:'Resistencia',dist:2050,desc:'250 suave\n4x100 Tecnica\n3x500 ritmo comodo\n200 suave soltar'},
+  {name:'Tecnica y fondo',dist:2150,desc:'250 suave\n4x100 Tecnica\n4x100\n3x400 ritmo comodo\n4x50 tecnica\n200 suaves'},
+  {name:'Tecnica pura',dist:1950,desc:'250 suaves\n6x50 tecnica\n4x100 tecnica controlada\n3x100 ritmo medio\n4x50 pull suave\n200 suave'},
+  {name:'Combinado',dist:2050,desc:'250 suaves\n4x50 tecnica\n5x200 ritmo medio\n4x50 suaves recuperacion\n200 suaves'},
+];
+
+// ── STATE ────────────────────────────────────────────────────
+let ST={sessions:[],workouts:[]};
+let selW=null,selF=null,curCustom=null,lastSD=null,curPDFSD=null;
+let curUser=null,localMode=false,obChoice='preset';
+
+// ── AUTH ─────────────────────────────────────────────────────
+function authTab(t){
+  document.querySelectorAll('.auth-tab').forEach((el,i)=>el.classList.toggle('on',['login','register'][i]===t));
+  document.getElementById('auth-login').style.display=t==='login'?'block':'none';
+  document.getElementById('auth-register').style.display=t==='register'?'block':'none';
+}
+function setAuthMsg(m,isError){
+  const el=document.getElementById('auth-msg');
+  el.textContent=m;
+  el.style.color=isError?'#e05030':'var(--or)';
+}
+
+async function doLogin(){
+  if(!sb){setAuthMsg('Configura Supabase primero.',true);return;}
+  const email=document.getElementById('login-email').value.trim();
+  const pass=document.getElementById('login-pass').value;
+  if(!email||!pass){setAuthMsg('Rellena email y contrasena.',true);return;}
+  setAuthMsg('Conectando...',false);
+  try{
+    const{data,error}=await sb.auth.signInWithPassword({email,password:pass});
+    if(error){
+      if(error.message.includes('rate limit'))setAuthMsg('Demasiados intentos. Espera unos minutos.',true);
+      else setAuthMsg('Error: '+error.message,true);
+      return;
+    }
+    curUser=data.user;
+    await loadSB();
+    showApp(email);
+  }catch(e){setAuthMsg('Error de conexion.',true);}
+}
+
+async function doRegister(){
+  if(!sb){setAuthMsg('Configura Supabase primero.',true);return;}
+  const email=document.getElementById('reg-email').value.trim();
+  const pass=document.getElementById('reg-pass').value;
+  if(!email){setAuthMsg('Introduce un email valido.',true);return;}
+  if(pass.length<6){setAuthMsg('La contrasena debe tener al menos 6 caracteres.',true);return;}
+  setAuthMsg('Creando cuenta...',false);
+  try{
+    const{data,error}=await sb.auth.signUp({email,password:pass});
+    if(error){
+      if(error.message.includes('rate limit'))setAuthMsg('Supabase limita registros. Espera 1 hora o usa otro email.',true);
+      else setAuthMsg('Error: '+error.message,true);
+      return;
+    }
+    curUser=data.user;
+    setAuthMsg('',false);
+    showOnboarding();
+  }catch(e){setAuthMsg('Error de conexion.',true);}
+}
+
+function useLocal(){
+  localMode=true;
+  try{const d=localStorage.getItem('ezio_v5');if(d)ST=JSON.parse(d);}catch(e){}
+  if(!ST.workouts||!ST.workouts.length)showOnboarding();
+  else showApp('local');
+}
+
+function showOnboarding(){
+  document.getElementById('auth-screen').style.display='none';
+  document.getElementById('onboarding').style.display='flex';
+}
+function selectOB(c){
+  obChoice=c;
+  document.getElementById('ob-preset').classList.toggle('sel',c==='preset');
+  document.getElementById('ob-blank').classList.toggle('sel',c==='blank');
+}
+async function finishOnboarding(){
+  if(obChoice==='preset'){
+    ST.workouts=PRESET_WORKOUTS.map(w=>({id:'p_'+Math.random().toString(36).slice(2),name:w.name,dist:w.dist,desc:w.desc}));
+    if(curUser){
+      for(const w of ST.workouts){
+        await sb.from('workouts').insert({user_id:curUser.id,name:w.name,dist:w.dist,desc:w.desc});
+      }
+    }
+  }
+  saveLocal();
+  document.getElementById('onboarding').style.display='none';
+  showApp(curUser?curUser.email:'local');
+}
+
+async function doLogout(){
+  if(sb&&!localMode){try{await sb.auth.signOut();}catch(e){}}
+  curUser=null;localMode=false;ST={sessions:[],workouts:[]};
+  selW=null;selF=null;curCustom=null;lastSD=null;
+  document.getElementById('app').style.display='none';
+  document.getElementById('auth-screen').style.display='flex';
+  setAuthMsg('',false);
+}
+
+function showApp(label){
+  document.getElementById('auth-screen').style.display='none';
+  document.getElementById('onboarding').style.display='none';
+  document.getElementById('app').style.display='block';
+  document.getElementById('user-email').textContent=label==='local'?'Modo local':label;
+  renderAll();renderWorkouts();renderHist();renderMyWorkouts();
+  setTimeout(buildMap,80);
+}
+
+// ── SUPABASE ─────────────────────────────────────────────────
+async function loadSB(){
+  if(!sb||!curUser)return;
+  try{
+    const[{data:sess},{data:works}]=await Promise.all([
+      sb.from('sessions').select('*').eq('user_id',curUser.id).order('created_at',{ascending:true}),
+      sb.from('workouts').select('*').eq('user_id',curUser.id).order('created_at',{ascending:true}),
+    ]);
+    if(sess)ST.sessions=sess.map(r=>({workout:r.workout,feeling:r.feeling,km:r.km,dist:r.dist||0,desc:r.desc||'',date:r.date,notes:r.notes||'',tStart:r.t_start||'',tEnd:r.t_end||'',pace:r.pace||''}));
+    if(works)ST.workouts=works.map(r=>({id:r.id,name:r.name,dist:r.dist||0,desc:r.desc||''}));
+  }catch(e){console.warn('loadSB error',e);}
+}
+async function saveSessDB(s){
+  if(!sb||!curUser)return;
+  try{await sb.from('sessions').insert({user_id:curUser.id,workout:s.workout,feeling:s.feeling,km:s.km,dist:s.dist,desc:s.desc,date:s.date,notes:s.notes,t_start:s.tStart,t_end:s.tEnd,pace:s.pace});}catch(e){console.warn('saveSessDB error',e);}
+}
+async function saveWorkoutDB(w){
+  if(!sb||!curUser)return;
+  try{const{data}=await sb.from('workouts').insert({user_id:curUser.id,name:w.name,dist:w.dist,desc:w.desc}).select().single();if(data)w.id=data.id;}catch(e){}
+}
+async function delWorkoutDB(id){
+  if(!sb||!curUser)return;
+  try{await sb.from('workouts').delete().eq('id',id).eq('user_id',curUser.id);}catch(e){}
+}
+function saveLocal(){if(localMode)try{localStorage.setItem('ezio_v5',JSON.stringify(ST));}catch(e){}}
+
+// ── HELPERS ──────────────────────────────────────────────────
+function totalKm(){return ST.sessions.reduce((a,s)=>a+s.km,0);}
+function getWeek(d){const t=new Date(d);t.setHours(0,0,0,0);t.setDate(t.getDate()-(t.getDay()||7)+1);return t.toISOString().slice(0,10);}
+function prevWeek(w){const d=new Date(w);d.setDate(d.getDate()-7);return d.toISOString().slice(0,10);}
+function calcStreak(){
+  if(!ST.sessions.length)return 0;
+  const wk={};ST.sessions.forEach(s=>{const w=getWeek(new Date(s.date));wk[w]=(wk[w]||0)+1;});
+  let n=0,w=getWeek(new Date());while(wk[w]){n++;w=prevWeek(w);}return n;
+}
+function getStory(n){return STORY[Math.min(n-1,STORY.length-1)];}
+
+function calcPace(){
+  const tS=document.getElementById('t-start').value;
+  const tE=document.getElementById('t-end').value;
+  const chip=document.getElementById('pace-chip');
+  if(!tS||!tE){chip.style.display='none';return;}
+  const[sh,sm]=tS.split(':').map(Number);
+  const[eh,em]=tE.split(':').map(Number);
+  let totalMin=(eh*60+em)-(sh*60+sm);
+  if(totalMin<=0)totalMin+=1440;
+  const dist=curCustom?curCustom.dist:(selW?ST.workouts.find(x=>x.id===selW)?.dist||0:0);
+  if(dist>0){
+    const pace100=totalMin/dist*100;
+    const pm=Math.floor(pace100);
+    const ps=Math.round((pace100-pm)*60);
+    chip.innerHTML=`<strong>Duracion:</strong> ${totalMin} min &nbsp;|&nbsp; <strong>Ritmo/100m:</strong> ${pm}:${ps<10?'0'+ps:ps} &nbsp;|&nbsp; <strong>Distancia:</strong> ${dist} m`;
+  }else{
+    chip.innerHTML=`<strong>Duracion:</strong> ${totalMin} min`;
+  }
+  chip.style.display='block';
+}
+
+// ── MAP ──────────────────────────────────────────────────────
+function buildMap(){
+  const wrap=document.getElementById('map-wrap');
+  if(!wrap)return;
+  const W=Math.max(wrap.getBoundingClientRect().width||wrap.offsetWidth,180);
+  // Use fixed aspect ratio
+  const H=Math.round(W*0.52);
+  const n=ST.sessions.length;
+  const curCity=n>0?SESSION_CITY[Math.min(n-1,SESSION_CITY.length-1)]:'Florencia';
+  const curCityIdx=CITY_ORDER.indexOf(curCity);
+
+  // Build position map
+  const pos={};
+  MAP_CITIES.forEach(c=>{pos[c.name]={x:c.rx*W, y:c.ry*H};});
+
+  // Determine visited cities
+  const visitedCities=new Set();
+  if(n>0){
+    for(let i=0;i<=Math.min(n-1,SESSION_CITY.length-1);i++){
+      visitedCities.add(SESSION_CITY[i]);
+    }
+  }
+
+  // Which path segments are done
+  const pathVisited=new Set();
+  // Mark a path segment done if both endpoints visited and we've progressed past first city
+  const pathOrder=['Florencia','Monteriggioni','Venecia','Roma','Viana','Constantinopla','Masyaf'];
+  for(let i=0;i<pathOrder.length-1;i++){
+    const fromIdx=CITY_ORDER.indexOf(pathOrder[i]);
+    if(fromIdx<curCityIdx) pathVisited.add(i);
+  }
+
+  let svg=`<svg width="100%" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="display:block;">`;
+
+  // Draw path lines
+  MAP_PATH.forEach(([a,b],i)=>{
+    const pa=pos[a],pb=pos[b];
+    if(!pa||!pb)return;
+    const done=visitedCities.has(a)&&visitedCities.has(b)&&curCityIdx>CITY_ORDER.indexOf(a);
+    svg+=`<line x1="${pa.x.toFixed(0)}" y1="${pa.y.toFixed(0)}" x2="${pb.x.toFixed(0)}" y2="${pb.y.toFixed(0)}" stroke="${done?'#D85A30':'#3a2010'}" stroke-width="1.5" stroke-dasharray="${done?'':'5,3'}" stroke-linecap="round"/>`;
+  });
+
+  // Draw city dots + labels
+  CITY_ORDER.forEach((name,i)=>{
+    const c=pos[name];if(!c)return;
+    const visited=visitedCities.has(name);
+    const isCur=name===curCity;
+    if(isCur){
+      svg+=`<circle cx="${c.x.toFixed(0)}" cy="${c.y.toFixed(0)}" r="9" fill="#D85A30" opacity="0.18"/>`;
+      svg+=`<circle cx="${c.x.toFixed(0)}" cy="${c.y.toFixed(0)}" r="5.5" fill="#D85A30" stroke="#f5c090" stroke-width="1.5"/>`;
+      svg+=`<circle cx="${c.x.toFixed(0)}" cy="${c.y.toFixed(0)}" r="2" fill="white"/>`;
+    }else if(visited){
+      svg+=`<circle cx="${c.x.toFixed(0)}" cy="${c.y.toFixed(0)}" r="4" fill="#993C1D" stroke="#D85A30" stroke-width="1"/>`;
+    }else{
+      svg+=`<circle cx="${c.x.toFixed(0)}" cy="${c.y.toFixed(0)}" r="3.5" fill="#1a0f06" stroke="#4a2808" stroke-width="1"/>`;
+    }
+    // Smart label placement: avoid edges, flip if near right
+    const fs=Math.max(8,Math.min(10,Math.round(W/36)));
+    const nearRight=c.x>W*0.70;
+    const nearBottom=c.y>H*0.80;
+    const lx=nearRight?c.x-8:c.x+8;
+    const ly=nearBottom?c.y-8:c.y+fs+5;
+    const anchor=nearRight?'end':'start';
+    svg+=`<text x="${lx.toFixed(0)}" y="${ly.toFixed(0)}" font-size="${fs}" fill="${visited||isCur?'#c07040':'#4a2808'}" text-anchor="${anchor}" font-family="-apple-system,sans-serif" font-weight="${isCur?'600':'400'}">${name}</text>`;
+  });
+
+  svg+='</svg>';
+  wrap.innerHTML=svg;
+}
+
+// ── AVATAR ───────────────────────────────────────────────────
+function updateAvatar(n){
+  const info=getAvatarInfo(n);
+  document.getElementById('avatar-wrap').innerHTML=getAvatarSVG(info.era);
+  document.getElementById('ava-era').textContent=info.eraLabel;
+  document.getElementById('ava-age').textContent=info.age;
+}
+
+// ── RENDER ───────────────────────────────────────────────────
+function renderAll(){
+  const n=ST.sessions.length;
+  const pct=Math.min(Math.round((n/75)*100),100);
+  document.getElementById('sync-pct').textContent=pct+'%';
+  document.getElementById('s-ses').textContent=n;
+  document.getElementById('s-km').textContent=totalKm().toFixed(1);
+  document.getElementById('s-str').textContent=calcStreak();
+  document.getElementById('prog-fill').style.width=pct+'%';
+  document.getElementById('prog-left').textContent=n+' / 75 sesiones';
+  document.getElementById('prog-right').textContent=Math.floor(n/5)+' capitulos';
+  updateAvatar(n);
+  if(n>0){
+    const s=getStory(n);
+    const tag=document.getElementById('game-tag');
+    tag.textContent=s.game==='AC II'?"Assassin's Creed II":s.game==='Brotherhood'?'AC Brotherhood':'AC Revelations';
+    tag.className='game-tag '+s.tag;
+    document.getElementById('ch-name').textContent=s.title;
+    document.getElementById('ch-quote').textContent=s.summary;
+  }
+  buildMap();
+}
+
+function renderWorkouts(){
+  const g=document.getElementById('wgrid');g.innerHTML='';
+  ST.workouts.forEach(w=>{
+    const d=document.createElement('div');
+    d.className='wbtn'+(selW===w.id&&!curCustom?' sel':'');
+    d.innerHTML=`<div class="wday">${(w.dist/1000).toFixed(1)} km</div><div class="wname">${w.name}</div><div class="wvol">${w.dist} m</div>`;
+    d.onclick=()=>{selW=w.id;curCustom=null;renderWorkouts();calcPace();checkBtn();};
+    g.appendChild(d);
+  });
+  const cust=document.createElement('div');
+  cust.className='wbtn custom-card'+(curCustom?' sel':'');
+  cust.innerHTML=curCustom
+    ?`<div class="wday">Personalizado</div><div class="wname">${curCustom.name}</div><div class="wvol">${curCustom.dist} m</div>`
+    :`<div class="wday">Otro</div><div class="wname">Entreno personalizado</div><div class="wvol">Meter a mano</div>`;
+  cust.onclick=()=>openCustom();
+  g.appendChild(cust);
+}
+
+function pickFeel(el){
+  selF=el.getAttribute('data-feel');
+  document.querySelectorAll('.fbtn').forEach(b=>b.classList.remove('sel'));
+  el.classList.add('sel');
+  checkBtn();
+}
+
+function checkBtn(){
+  document.getElementById('log-btn').disabled=!((selW||curCustom)&&selF);
+}
+
+// ── LOG SESSION ──────────────────────────────────────────────
+async function doLog(){
+  let w;
+  if(curCustom){w={name:curCustom.name,km:curCustom.dist/1000,dist:curCustom.dist,desc:curCustom.desc||''};}
+  else{const f=ST.workouts.find(x=>x.id===selW);w={name:f.name,km:f.dist/1000,dist:f.dist,desc:f.desc||''};}
+  const now=new Date();
+  const notes=document.getElementById('notes').value.trim();
+  const tStart=document.getElementById('t-start').value;
+  const tEnd=document.getElementById('t-end').value;
+  // calc pace
+  let paceStr='';
+  if(tStart&&tEnd){
+    const[sh,sm]=tStart.split(':').map(Number);
+    const[eh,em]=tEnd.split(':').map(Number);
+    let tot=(eh*60+em)-(sh*60+sm);
+    if(tot<=0)tot+=1440;
+    if(w.dist>0){
+      const p100=tot/w.dist*100;
+      const pm=Math.floor(p100);const ps=Math.round((p100-pm)*60);
+      paceStr=`${tot} min · ${pm}:${ps<10?'0'+ps:ps}/100m`;
+    }else{paceStr=`${tot} min`;}
+  }
+  const sess={workout:w.name,feeling:selF,km:w.km,dist:w.dist,desc:w.desc,date:now.toISOString(),notes,tStart,tEnd,pace:paceStr};
+  ST.sessions.push(sess);
+  if(curUser)await saveSessDB(sess);
+  saveLocal();
+  const n=ST.sessions.length;
+  const story=getStory(n);
+  lastSD={sessionNum:n,workout:w.name,km:w.km,dist:w.dist,desc:w.desc,feeling:selF,totalKm:totalKm(),streak:calcStreak(),notes,tStart,tEnd,pace:paceStr,date:now.toISOString(),story,prevStories:ST.sessions.slice(0,n).map((_,i)=>getStory(i+1))};
+  selW=null;selF=null;curCustom=null;
+  document.querySelectorAll('.fbtn').forEach(b=>b.classList.remove('sel'));
+  document.getElementById('notes').value='';
+  document.getElementById('t-start').value='';
+  document.getElementById('t-end').value='';
+  document.getElementById('pace-chip').style.display='none';
+  checkBtn();renderWorkouts();renderAll();renderHist();
+  showNotif(getAchievement(n)||'Memoria sincronizada — sesion #'+n+' desbloqueada.');
+  document.getElementById('preview-btn').style.display='block';
+}
+
+function getAchievement(n){
+  const m={5:'Capitulo completado — Ezio abandona Florencia.',10:'Venecia emerge en el horizonte.',15:'La Hermandad toma forma.',20:'El Carnaval y las sombras.',25:'Las puertas del Vaticano.',30:'AC II COMPLETADO. El maestro joven.',35:'Brotherhood — Roma bajo los Borgia.',40:'La Hermandad crece.',45:'Cesare acorralado.',50:'Brotherhood COMPLETADO. 50 sesiones.',55:'Revelations — Constantinopla te espera.',60:'Las llaves de Altair.',65:'Los recuerdos del primer Maestro.',70:'El ultimo mensaje de Ezio.',75:'TRILOGIA COMPLETA. Eres otro.'};
+  return m[n]||null;
+}
+function showNotif(msg){
+  const nb=document.getElementById('notif');
+  nb.textContent=msg;nb.style.display='block';
+  setTimeout(()=>nb.style.display='none',5000);
+}
+
+// ── CUSTOM WORKOUT ───────────────────────────────────────────
+function openCustom(){document.getElementById('custom-modal').classList.add('on');}
+function closeCustom(){document.getElementById('custom-modal').classList.remove('on');}
+async function confirmCustom(){
+  const name=document.getElementById('c-name').value.trim();
+  const dist=parseInt(document.getElementById('c-dist').value)||2000;
+  const desc=document.getElementById('c-desc').value.trim();
+  if(!name){alert('Pon un nombre al entreno.');return;}
+  const save=document.getElementById('save-workout').checked;
+  if(save){
+    const nw={id:'tmp_'+Date.now(),name,dist,desc};
+    ST.workouts.push(nw);
+    await saveWorkoutDB(nw);
+    saveLocal();renderMyWorkouts();
+  }
+  curCustom={name,dist,desc};selW=null;
+  document.getElementById('c-name').value='';document.getElementById('c-dist').value='';document.getElementById('c-desc').value='';
+  closeCustom();renderWorkouts();calcPace();checkBtn();
+}
+
+// ── MY WORKOUTS ──────────────────────────────────────────────
+function openNewWorkout(){document.getElementById('new-workout-modal').classList.add('on');}
+function closeNewWorkout(){document.getElementById('new-workout-modal').classList.remove('on');}
+async function saveNewWorkout(){
+  const name=document.getElementById('nw-name').value.trim();
+  const dist=parseInt(document.getElementById('nw-dist').value)||2000;
+  const desc=document.getElementById('nw-desc').value.trim();
+  if(!name){alert('Pon un nombre.');return;}
+  const nw={id:'tmp_'+Date.now(),name,dist,desc};
+  ST.workouts.push(nw);
+  await saveWorkoutDB(nw);
+  saveLocal();
+  document.getElementById('nw-name').value='';document.getElementById('nw-dist').value='';document.getElementById('nw-desc').value='';
+  closeNewWorkout();renderMyWorkouts();renderWorkouts();
+}
+async function deleteWorkout(id){
+  if(!confirm('Borrar este entreno?'))return;
+  ST.workouts=ST.workouts.filter(w=>w.id!==id);
+  await delWorkoutDB(id);
+  saveLocal();renderMyWorkouts();renderWorkouts();
+}
+function renderMyWorkouts(){
+  const list=document.getElementById('mw-list');
+  const empty=document.getElementById('mw-empty');
+  if(!ST.workouts.length){list.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  list.innerHTML=ST.workouts.map(w=>`
+    <div class="mw-item">
+      <div class="mw-info"><div class="mw-name">${w.name}</div><div class="mw-meta">${w.dist} m${w.desc?' · '+w.desc.split('\n')[0]:''}</div></div>
+      <div class="mw-del" onclick="deleteWorkout('${w.id}')">×</div>
+    </div>`).join('');
+}
+
+// ── HISTORY ──────────────────────────────────────────────────
+function renderHist(){
+  const list=document.getElementById('hist-list');
+  const empty=document.getElementById('hist-empty');
+  if(!ST.sessions.length){list.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  list.innerHTML=[...ST.sessions].reverse().slice(0,40).map((s,ri)=>{
+    const idx=ST.sessions.length-1-ri;
+    const d=new Date(s.date).toLocaleDateString('es-ES',{weekday:'short',day:'numeric',month:'short'});
+    const st=getStory(idx+1);
+    const pace=s.pace?` · ${s.pace}`:'';
+    return`<div class="hist-item">
+      <div class="hist-dot"></div>
+      <div class="hist-info">
+        <div class="hist-name">#${idx+1} ${s.workout} · ${s.feeling}</div>
+        <div class="hist-meta">${d}${pace}</div>
+      </div>
+      <div class="hist-act" onclick="openPreview(${idx})">Ver</div>
+    </div>`;
+  }).join('');
+}
+
+// ── PDF PREVIEW ──────────────────────────────────────────────
+function buildSD(i){
+  const s=ST.sessions[i];const n=i+1;
+  const km=ST.sessions.slice(0,n).reduce((a,x)=>a+x.km,0);
+  return{sessionNum:n,workout:s.workout,km:s.km,dist:s.dist||0,desc:s.desc||'',feeling:s.feeling,totalKm:km,streak:0,notes:s.notes||'',tStart:s.tStart||'',tEnd:s.tEnd||'',pace:s.pace||'',date:s.date,story:getStory(n),prevStories:ST.sessions.slice(0,n).map((_,j)=>getStory(j+1))};
+}
+function openPreview(idx){
+  curPDFSD=idx===null?lastSD:buildSD(idx);
+  if(!curPDFSD)return;
+  renderPreview(curPDFSD);
+  document.getElementById('pdf-overlay').classList.add('on');
+}
+function closePDF(){document.getElementById('pdf-overlay').classList.remove('on');}
+
+function renderPreview(sd){
+  const pct=Math.min(Math.round((sd.sessionNum/75)*100),100);
+  const tColors={'tag-ac2':'background:#FAECE7;color:#712B13','tag-bro':'background:#EEEDFE;color:#3C3489','tag-rev':'background:#E1F5EE;color:#085041'};
+  const tLabel=sd.story.game==='AC II'?"Assassin's Creed II":sd.story.game==='Brotherhood'?'AC Brotherhood':'AC Revelations';
+  const hist=sd.prevStories.slice(-5).map((st,i)=>{
+    const ai=sd.sessionNum-sd.prevStories.slice(-5).length+i;
+    const ses=ST.sessions[ai];if(!ses)return'';
+    const d=new Date(ses.date).toLocaleDateString('es-ES',{day:'numeric',month:'short'});
+    return`<div class="pv-hist-item"><strong>#${ai+1} ${d}</strong> — ${st.title}</div>`;
+  }).join('');
+
+  const storyParas=sd.story.text.split('\n\n').map(p=>`<p style="margin-bottom:10px;">${p}</p>`).join('');
+
+  document.getElementById('pdf-scroll').innerHTML=`
+  <div class="pv-card">
+    <div class="pv-header">
+      <span class="pv-sync">${pct}% sync</span>
+      <div class="pv-animus">ANIMUS 2.0 // MEMORY SEQUENCE</div>
+      <div class="pv-title">Nada con Ezio</div>
+      <div class="pv-sub">De Florencia a Constantinopla</div>
+    </div>
+
+    <div class="pv-sec">
+      <div class="pv-lbl">Capitulo de hoy</div>
+      <span class="pv-tag" style="${tColors[sd.story.tag]}">${tLabel}</span>
+      <div class="pv-ch-name">${sd.story.title}</div>
+      <div class="pv-chapter-text">${storyParas}</div>
+    </div>
+
+    ${sd.desc?`<div class="pv-sec">
+      <div class="pv-lbl">Entreno realizado</div>
+      <div class="pv-workout-block">
+        <div class="pv-workout-title">${sd.workout} — ${sd.dist} m</div>
+        <div class="pv-workout-desc">${sd.desc}</div>
+      </div>
+    </div>`:''}
+
+    <div class="pv-sec">
+      <div class="pv-lbl">Datos de la sesion</div>
+      <div class="pv-grid">
+        <div class="pv-stat"><div class="pv-sl">Sesion</div><div class="pv-sv">#${sd.sessionNum}</div></div>
+        <div class="pv-stat"><div class="pv-sl">Estado</div><div class="pv-sv">${sd.feeling}</div></div>
+        <div class="pv-stat"><div class="pv-sl">Km sesion</div><div class="pv-sv">${sd.km.toFixed(2)}</div></div>
+        <div class="pv-stat"><div class="pv-sl">Km totales</div><div class="pv-sv">${sd.totalKm.toFixed(1)}</div></div>
+        <div class="pv-stat"><div class="pv-sl">Racha</div><div class="pv-sv">${sd.streak} sem</div></div>
+        ${sd.pace?`<div class="pv-stat"><div class="pv-sl">Ritmo</div><div class="pv-sv highlight" style="font-size:11px;">${sd.pace}</div></div>`:'<div class="pv-stat"><div class="pv-sl">Sincronizacion</div><div class="pv-sv">${pct}%</div></div>'}
+      </div>
+      ${sd.tStart&&sd.tEnd?`<div style="font-size:11px;color:var(--tx3);margin-top:8px;">Inicio: ${sd.tStart} &nbsp;·&nbsp; Fin: ${sd.tEnd}</div>`:''}
+    </div>
+
+    ${sd.notes?`<div class="pv-sec"><div class="pv-lbl">Notas del dia</div><div class="pv-notes">${sd.notes}</div></div>`:''}
+    ${hist?`<div class="pv-sec"><div class="pv-lbl">Ultimas memorias</div>${hist}</div>`:''}
+    <div class="pv-footer"><div class="pv-ft">${new Date(sd.date).toLocaleDateString('es-ES',{weekday:'long',year:'numeric',month:'long',day:'numeric'}).toUpperCase()} // NADA CON EZIO</div></div>
+  </div>`;
+}
+
+// ── PDF DOWNLOAD ─────────────────────────────────────────────
+function downloadPDF(){
+  if(!curPDFSD||!window.jspdf){alert('PDF no disponible aun.');return;}
+  const sd=curPDFSD;
+  const{jsPDF}=window.jspdf;
+  const doc=new jsPDF({unit:'mm',format:'a4'});
+  const W=210,H=297;
+  const or=[216,90,48];
+
+  doc.setFillColor(15,10,5);doc.rect(0,0,W,H,'F');
+  doc.setFillColor(...or);doc.rect(0,0,W,3,'F');
+  doc.setFillColor(28,18,8);doc.rect(0,3,W,44,'F');
+  doc.setTextColor(...or);doc.setFontSize(7.5);doc.setFont('helvetica','bold');
+  doc.text('ANIMUS 2.0  //  MEMORY SEQUENCE',20,14);
+  const pct=Math.min(Math.round((sd.sessionNum/75)*100),100);
+  doc.setTextColor(140,100,60);doc.text('SYNC: '+pct+'%',W-20,14,{align:'right'});
+  doc.setTextColor(240,220,190);doc.setFontSize(19);doc.text('NADA CON EZIO',20,26);
+  doc.setTextColor(160,110,60);doc.setFontSize(8.5);doc.setFont('helvetica','normal');
+  doc.text('De Florencia a Constantinopla  //  Una sesion a la vez',20,35);
+  doc.setDrawColor(...or);doc.setLineWidth(0.3);doc.line(20,47,W-20,47);
+
+  let cy=56;
+
+  // CHAPTER FULL TEXT
+  doc.setTextColor(...or);doc.setFontSize(7);doc.setFont('helvetica','bold');doc.text('// CAPITULO DE HOY',20,cy);cy+=5;
+  doc.setFillColor(20,12,5);doc.rect(20,cy,W-40,70,'F');
+  doc.setDrawColor(70,40,15);doc.setLineWidth(0.2);doc.rect(20,cy,W-40,70);
+  doc.setFillColor(...or);doc.roundedRect(24,cy+3,35,5,0.8,0.8,'F');
+  doc.setTextColor(255,230,200);doc.setFontSize(6);doc.setFont('helvetica','bold');
+  doc.text(sd.story.game==='AC II'?'ASSASSINS CREED II':sd.story.game==='Brotherhood'?'AC BROTHERHOOD':'AC REVELATIONS',41.5,cy+6.8,{align:'center'});
+  doc.setTextColor(200,160,100);doc.setFontSize(8);doc.setFont('helvetica','bold');
+  doc.text('MEMORIA '+sd.sessionNum+' DE 75',24,cy+14);
+  doc.setTextColor(235,215,185);doc.setFontSize(10.5);doc.setFont('helvetica','bold');
+  const nl=doc.splitTextToSize(sd.story.title,W-50);doc.text(nl,24,cy+21);
+  doc.setTextColor(148,108,68);doc.setFontSize(8.5);doc.setFont('helvetica','italic');
+  const fullTxt=sd.story.text.replace(/\n\n/g,' ');
+  const tl=doc.splitTextToSize(fullTxt,W-50);
+  doc.text(tl.slice(0,7),24,cy+21+(nl.length*5));
+  cy+=78;
+
+  // WORKOUT
+  if(sd.desc){
+    doc.setTextColor(...or);doc.setFontSize(7);doc.setFont('helvetica','bold');doc.text('// ENTRENO REALIZADO',20,cy);cy+=4;
+    doc.setFillColor(16,9,3);doc.rect(20,cy,W-40,30,'F');
+    doc.setDrawColor(55,30,10);doc.setLineWidth(0.2);doc.rect(20,cy,W-40,30);
+    doc.setTextColor(200,158,96);doc.setFontSize(9);doc.setFont('helvetica','bold');
+    doc.text(sd.workout+' — '+sd.dist+' m',24,cy+7);
+    doc.setTextColor(130,95,55);doc.setFontSize(8);doc.setFont('helvetica','normal');
+    const dl=doc.splitTextToSize(sd.desc,W-52);doc.text(dl.slice(0,4),24,cy+13);
+    cy+=37;
+  }
+
+  // STATS
+  doc.setTextColor(...or);doc.setFontSize(7);doc.setFont('helvetica','bold');doc.text('// DATOS DE LA SESION',20,cy);cy+=4;
+  const boxes=[
+    {l:'SESION',v:'#'+sd.sessionNum},{l:'ESTADO',v:sd.feeling},
+    {l:'KM SESION',v:sd.km.toFixed(2)+' km'},{l:'KM TOTALES',v:sd.totalKm.toFixed(1)+' km'},
+    {l:'RACHA',v:sd.streak+' sem'},{l:'RITMO/100m',v:sd.pace||'—'},
+  ];
+  const bW=(W-40)/3,bH=20;
+  boxes.forEach((b,i)=>{
+    const col=i%3,row=Math.floor(i/3),bX=20+col*bW,bY=cy+row*(bH+3);
+    doc.setFillColor(16,9,3);doc.rect(bX,bY,bW-2,bH,'F');
+    doc.setDrawColor(50,28,8);doc.setLineWidth(0.2);doc.rect(bX,bY,bW-2,bH);
+    doc.setTextColor(100,68,32);doc.setFontSize(6.5);doc.setFont('helvetica','normal');doc.text(b.l,bX+3,bY+6);
+    doc.setTextColor(230,190,140);doc.setFontSize(b.v.length>10?8.5:10);doc.setFont('helvetica','bold');doc.text(b.v,bX+3,bY+15);
+  });
+  cy+=2*(bH+3)+bH+10;
+
+  if(sd.tStart&&sd.tEnd){
+    doc.setTextColor(100,68,32);doc.setFontSize(8);doc.setFont('helvetica','normal');
+    doc.text('Inicio: '+sd.tStart+'  ·  Fin: '+sd.tEnd,20,cy);cy+=8;
+  }
+
+  if(sd.notes&&sd.notes.trim()){
+    doc.setTextColor(...or);doc.setFontSize(7);doc.setFont('helvetica','bold');doc.text('// NOTAS',20,cy);cy+=4;
+    doc.setFillColor(16,9,3);doc.rect(20,cy,W-40,16,'F');
+    doc.setDrawColor(50,28,8);doc.setLineWidth(0.2);doc.rect(20,cy,W-40,16);
+    doc.setTextColor(158,118,68);doc.setFontSize(8.5);doc.setFont('helvetica','italic');
+    doc.text(doc.splitTextToSize(sd.notes,W-52).slice(0,2),24,cy+8);cy+=22;
+  }
+
+  const hist=sd.prevStories.slice(-4);
+  if(hist.length>1&&cy<H-50){
+    doc.setTextColor(...or);doc.setFontSize(7);doc.setFont('helvetica','bold');doc.text('// ULTIMAS MEMORIAS',20,cy);cy+=6;
+    hist.forEach((st,i)=>{
+      const ai=sd.sessionNum-hist.length+i;const ses=ST.sessions[ai];
+      if(!ses||cy>H-38)return;
+      const d=new Date(ses.date).toLocaleDateString('es-ES',{day:'numeric',month:'short'});
+      doc.setTextColor(118,82,42);doc.setFontSize(8);doc.setFont('helvetica','normal');
+      doc.text('#'+(ai+1)+' '+d+' — '+st.title.slice(0,50),20,cy);cy+=5.5;
+    });
+  }
+
+  const fy=H-24;
+  doc.setDrawColor(42,22,6);doc.setLineWidth(0.2);doc.line(20,fy,W-20,fy);
+  doc.setTextColor(78,48,20);doc.setFontSize(7.5);doc.setFont('helvetica','normal');
+  const ds=new Date(sd.date).toLocaleDateString('es-ES',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  doc.text(ds.toUpperCase(),20,fy+7);
+  doc.text('NADA CON EZIO // AC TRAINING LOG',W-20,fy+7,{align:'right'});
+  doc.setFillColor(...or);doc.rect(0,H-3,W,3,'F');
+  doc.save('memoria-ezio-'+sd.sessionNum+'.pdf');
+}
+
+// ── TABS ─────────────────────────────────────────────────────
+function goTab(t){
+  document.querySelectorAll('.tab').forEach((el,i)=>el.classList.toggle('on',['log','hist','mw'][i]===t));
+  document.querySelectorAll('.view').forEach(el=>el.classList.remove('on'));
+  document.getElementById('view-'+t).classList.add('on');
+}
+
+// ── INIT ─────────────────────────────────────────────────────
+window.addEventListener('resize',()=>{
+  if(document.getElementById('app').style.display!=='none')buildMap();
+});
+
+if(sb){
+  sb.auth.getSession().then(({data})=>{
+    if(data&&data.session){
+      curUser=data.session.user;
+      loadSB().then(()=>showApp(data.session.user.email));
+    }
+  }).catch(()=>{});
+}
+</script>
+</body>
+</html>
