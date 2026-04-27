@@ -1,0 +1,1404 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Nada con Ezio">
+<meta name="theme-color" content="#1a1008">
+<title>Nada con Ezio</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root{
+  --bg:#0f0a04;--bg2:#1a1008;--bg3:#251508;
+  --border:#3a2010;--border2:#5a3518;
+  --or:#D85A30;--or2:#993C1D;--or3:#712B13;
+  --tx:#f0e0c8;--tx2:#c09060;--tx3:#7a5030;--tx4:#4a2808;
+  --r:14px;--rs:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{min-height:100%;background:var(--bg);color:var(--tx);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;}
+
+/* ── AUTH ── */
+#auth-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:2rem;}
+.auth-logo{font-size:26px;font-weight:700;color:var(--tx);margin-bottom:4px;}
+.auth-sub{font-size:13px;color:var(--tx3);margin-bottom:2rem;text-align:center;line-height:1.5;}
+.auth-card{background:var(--bg2);border:0.5px solid var(--border2);border-radius:var(--r);padding:1.5rem;width:100%;max-width:360px;}
+.auth-tabs{display:flex;margin-bottom:1.25rem;border-bottom:0.5px solid var(--border);}
+.auth-tab{flex:1;padding:10px;font-size:13px;color:var(--tx3);cursor:pointer;text-align:center;border-bottom:2px solid transparent;}
+.auth-tab.on{color:var(--or);border-bottom-color:var(--or);font-weight:600;}
+.auth-field{margin-bottom:12px;}
+.auth-field label{display:block;font-size:11px;color:var(--tx3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em;}
+.auth-field input{width:100%;background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--rs);padding:12px;font-size:14px;color:var(--tx);outline:none;font-family:inherit;}
+.auth-field input:focus{border-color:var(--or);}
+.remember-row{display:flex;align-items:center;gap:8px;margin-bottom:14px;}
+.remember-row input[type=checkbox]{width:16px;height:16px;accent-color:var(--or);cursor:pointer;flex-shrink:0;}
+.remember-row label{font-size:12px;color:var(--tx3);cursor:pointer;}
+.auth-btn{width:100%;padding:13px;background:var(--or2);color:#fff;border:none;border-radius:var(--rs);font-size:14px;font-weight:600;cursor:pointer;}
+.auth-btn:active{background:var(--or3);}
+.auth-msg{font-size:12px;color:var(--or);margin-top:10px;text-align:center;min-height:18px;line-height:1.4;}
+.auth-or{font-size:11px;color:var(--tx4);text-align:center;margin:12px 0;}
+.sec-btn{width:100%;padding:12px;background:transparent;color:var(--or);border:0.5px solid var(--or);border-radius:var(--rs);font-size:13px;cursor:pointer;}
+
+/* ── ONBOARDING ── */
+#onboarding{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:2rem;}
+.ob-card{background:var(--bg2);border:0.5px solid var(--border2);border-radius:var(--r);padding:1.5rem;width:100%;max-width:420px;}
+.ob-title{font-size:18px;font-weight:700;color:var(--tx);margin-bottom:6px;}
+.ob-sub{font-size:13px;color:var(--tx3);margin-bottom:1.5rem;line-height:1.5;}
+.ob-option{background:var(--bg3);border:0.5px solid var(--border2);border-radius:var(--rs);padding:14px;margin-bottom:10px;cursor:pointer;}
+.ob-option h3{font-size:14px;font-weight:600;color:var(--tx);margin-bottom:4px;}
+.ob-option p{font-size:12px;color:var(--tx3);line-height:1.4;}
+.ob-option.sel{border:1.5px solid var(--or);background:#2a1208;}
+
+/* ── APP LAYOUT ── */
+#app{display:none;}
+.app-inner{display:flex;flex-direction:column;min-height:100vh;}
+.left-col{width:100%;}
+.right-col{width:100%;flex:1;}
+@media(min-width:860px){
+  .app-inner{flex-direction:row;align-items:stretch;}
+  .left-col{width:340px;min-width:340px;max-width:340px;position:sticky;top:0;height:100vh;overflow-y:auto;border-right:0.5px solid var(--border);flex-shrink:0;}
+  .right-col{flex:1;min-width:0;}
+}
+
+/* ── AVATAR ── */
+.avatar-section{background:var(--bg2);padding:16px;border-bottom:0.5px solid var(--border);display:flex;align-items:center;gap:14px;}
+.avatar-img{width:72px;height:72px;border-radius:50%;border:2px solid var(--or);object-fit:cover;flex-shrink:0;background:var(--bg3);}
+.avatar-svg{width:72px;height:72px;border-radius:50%;border:2px solid var(--or);flex-shrink:0;background:var(--bg3);overflow:hidden;}
+.avatar-info{flex:1;min-width:0;}
+.avatar-era{font-size:10px;color:var(--or);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px;}
+.avatar-name{font-size:15px;font-weight:700;color:var(--tx);margin-bottom:2px;}
+.avatar-age{font-size:12px;color:var(--tx3);}
+
+/* ── TOPBAR ── */
+.topbar{background:var(--bg2);padding:max(env(safe-area-inset-top),14px) 16px 14px;}
+.animus-pill{display:inline-flex;align-items:center;gap:6px;background:var(--bg3);border:0.5px solid var(--border2);border-radius:20px;padding:4px 10px;margin-bottom:10px;}
+.animus-dot{width:6px;height:6px;border-radius:50%;background:var(--or);animation:blink 2s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.animus-txt{font-size:11px;color:var(--tx3);letter-spacing:.04em;}
+.sync-row{display:flex;justify-content:space-between;align-items:flex-end;}
+.hero-title{font-size:22px;font-weight:700;color:var(--tx);}
+.hero-sub{font-size:12px;color:var(--tx3);margin-top:2px;}
+.sync-val{font-size:26px;font-weight:700;color:var(--or);line-height:1;}
+.sync-label{font-size:10px;color:var(--tx3);margin-top:2px;text-align:right;}
+.user-row{display:flex;justify-content:space-between;align-items:center;margin-top:8px;}
+.user-email{font-size:11px;color:var(--tx4);}
+.logout-lnk{font-size:11px;color:var(--tx3);cursor:pointer;text-decoration:underline;}
+
+/* ── MAP ── */
+.map-section{background:#090602;padding:14px 16px;border-top:0.5px solid var(--border);border-bottom:0.5px solid var(--border);}
+.map-label{font-size:10px;color:var(--tx4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;}
+#map-wrap{width:100%;line-height:0;overflow:hidden;}
+.prog-wrap{margin-top:8px;}
+.prog-bg{width:100%;height:4px;background:var(--border);border-radius:2px;overflow:hidden;}
+.prog-fill{height:100%;background:var(--or);border-radius:2px;transition:width .4s;}
+.prog-labels{display:flex;justify-content:space-between;margin-top:4px;}
+.prog-labels span{font-size:10px;color:var(--tx3);}
+
+/* ── CHAPTER ── */
+.chapter-card{background:var(--bg2);padding:12px 16px;border-bottom:0.5px solid var(--border);}
+.game-tag{display:inline-block;font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;margin-bottom:6px;}
+.tag-ac2{background:#FAECE7;color:#712B13;}
+.tag-bro{background:#EEEDFE;color:#3C3489;}
+.tag-rev{background:#E1F5EE;color:#085041;}
+.ch-name{font-size:13px;font-weight:600;color:var(--tx);margin-bottom:5px;line-height:1.4;}
+.ch-quote{font-size:11px;color:var(--tx2);font-style:italic;line-height:1.6;border-left:2px solid var(--or);padding-left:8px;border-radius:0;}
+
+/* ── STATS ── */
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:10px 16px;background:var(--bg);border-bottom:0.5px solid var(--border);}
+.stat-box{background:var(--bg2);border-radius:var(--rs);padding:8px;text-align:center;}
+.stat-n{font-size:22px;font-weight:700;color:var(--tx);line-height:1;}
+.stat-l{font-size:10px;color:var(--tx3);margin-top:3px;}
+
+/* ── TABS ── */
+.tabs{display:flex;background:var(--bg2);border-bottom:0.5px solid var(--border);position:sticky;top:0;z-index:20;}
+.tab{flex:1;padding:12px 4px;font-size:12px;color:var(--tx3);cursor:pointer;text-align:center;border-bottom:2px solid transparent;}
+.tab.on{color:var(--or);border-bottom-color:var(--or);font-weight:600;}
+.view{display:none;padding:14px 16px;}
+.view.on{display:block;}
+
+/* ── FORM ── */
+.slbl{font-size:11px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;}
+.wgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;}
+.wbtn{background:var(--bg2);border:0.5px solid var(--border2);border-radius:var(--r);padding:12px 10px;text-align:left;cursor:pointer;}
+.wbtn.sel{border:2px solid var(--or);background:#2a1208;}
+.wday{font-size:10px;color:var(--tx3);margin-bottom:2px;}
+.wname{font-size:13px;font-weight:600;color:var(--tx);}
+.wvol{font-size:10px;color:var(--tx3);margin-top:2px;}
+.wbtn.custom-card{border-style:dashed;}
+.wbtn.custom-card .wname{color:var(--or);}
+
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;}
+.fbtn{padding:12px 8px;border:0.5px solid var(--border2);border-radius:var(--r);background:var(--bg2);cursor:pointer;font-size:13px;color:var(--tx2);text-align:center;}
+.fbtn.sel{border:2px solid var(--or)!important;background:#2a1208!important;color:var(--or)!important;font-weight:600!important;}
+
+/* time inputs */
+.time-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;}
+.time-block{background:var(--bg2);border:0.5px solid var(--border2);border-radius:var(--rs);padding:10px 12px;}
+.time-block label{display:block;font-size:10px;color:var(--tx3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em;}
+.time-block input[type=time]{width:100%;background:transparent;border:none;color:var(--tx);font-size:15px;font-weight:600;font-family:inherit;outline:none;cursor:pointer;}
+.time-block input[type=time]::-webkit-calendar-picker-indicator{filter:invert(0.6) sepia(1) hue-rotate(330deg);cursor:pointer;}
+.pace-chip{background:var(--bg3);border:0.5px solid var(--border2);border-radius:8px;padding:8px 12px;margin-bottom:16px;display:none;font-size:12px;color:var(--tx2);line-height:1.6;}
+.pace-chip strong{color:var(--or);}
+
+textarea,input[type=text],input[type=number],input[type=password],input[type=email]{
+  width:100%;border:0.5px solid var(--border2);border-radius:var(--rs);
+  padding:11px;font-size:14px;font-family:inherit;color:var(--tx);
+  background:var(--bg2);outline:none;display:block;
+}
+textarea{resize:none;margin-bottom:12px;}
+input:focus,textarea:focus{border-color:var(--or);}
+::placeholder{color:var(--tx4);}
+.field-wrap{margin-bottom:12px;}
+
+.main-btn{width:100%;padding:13px;background:var(--or2);color:#fff;border:none;border-radius:var(--r);font-size:14px;font-weight:600;cursor:pointer;margin-bottom:10px;display:block;}
+.main-btn:disabled{background:var(--bg3);color:var(--tx4);cursor:default;}
+.main-btn:active:not(:disabled){background:var(--or3);}
+.ghost-btn{width:100%;padding:11px;background:transparent;color:var(--or);border:0.5px solid var(--or);border-radius:var(--r);font-size:13px;font-weight:500;cursor:pointer;margin-bottom:10px;display:block;}
+
+.notif{background:#2a1208;border:0.5px solid var(--or);border-radius:var(--rs);padding:10px 14px;font-size:13px;color:var(--tx2);margin-bottom:12px;display:none;line-height:1.5;}
+
+/* ── HISTORY ── */
+.hist-item{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:0.5px solid var(--border);}
+.hist-dot{width:8px;height:8px;border-radius:50%;background:var(--or);flex-shrink:0;}
+.hist-info{flex:1;min-width:0;}
+.hist-name{font-size:13px;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.hist-meta{font-size:11px;color:var(--tx3);margin-top:2px;}
+.hist-act{font-size:11px;color:var(--or);cursor:pointer;padding:5px 9px;border:0.5px solid var(--border2);border-radius:8px;white-space:nowrap;flex-shrink:0;}
+.empty-msg{font-size:13px;color:var(--tx3);text-align:center;padding:3rem 0;}
+
+/* ── MY WORKOUTS ── */
+.mw-item{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:0.5px solid var(--border);}
+.mw-info{flex:1;min-width:0;}
+.mw-name{font-size:13px;font-weight:600;color:var(--tx);}
+.mw-meta{font-size:11px;color:var(--tx3);margin-top:2px;}
+.mw-del{font-size:18px;color:var(--tx4);cursor:pointer;padding:4px 8px;flex-shrink:0;}
+
+/* ── MODALS ── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:100;display:none;align-items:flex-end;justify-content:center;}
+.overlay.on{display:flex;}
+.modal{background:var(--bg2);border-radius:var(--r) var(--r) 0 0;padding:18px 16px max(env(safe-area-inset-bottom),18px);width:100%;max-width:560px;max-height:90vh;overflow-y:auto;}
+.modal-title{font-size:16px;font-weight:700;color:var(--tx);margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;}
+.modal-close{font-size:22px;color:var(--tx3);cursor:pointer;}
+
+/* ── PDF MODAL ── */
+.pdf-overlay{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:200;display:none;flex-direction:column;}
+.pdf-overlay.on{display:flex;}
+.pdf-topbar{display:flex;justify-content:space-between;align-items:center;padding:max(env(safe-area-inset-top),14px) 16px 14px;background:var(--bg2);flex-shrink:0;border-bottom:0.5px solid var(--border);}
+.pdf-topbar-title{font-size:15px;font-weight:600;color:var(--tx);}
+.pdf-close{font-size:24px;color:var(--tx3);cursor:pointer;line-height:1;}
+.pdf-scroll{flex:1;overflow-y:auto;padding:16px;}
+.pdf-dl{margin:0 16px max(env(safe-area-inset-bottom),14px);padding:13px;background:var(--or2);color:#fff;border:none;border-radius:var(--r);font-size:14px;font-weight:600;cursor:pointer;width:calc(100%-32px);display:block;text-align:center;}
+
+/* ── PDF PREVIEW CARD ── */
+.pv-card{background:#100804;border:0.5px solid var(--border2);border-radius:var(--r);overflow:hidden;margin-bottom:12px;}
+.pv-header{background:#1a0f06;padding:14px 16px;border-bottom:0.5px solid var(--border);}
+.pv-animus{font-size:9px;color:var(--or);letter-spacing:.08em;margin-bottom:5px;}
+.pv-title{font-size:19px;font-weight:700;color:var(--tx);margin-bottom:2px;}
+.pv-sub{font-size:11px;color:var(--tx3);}
+.pv-sync{float:right;font-size:13px;font-weight:700;color:var(--or);}
+.pv-sec{padding:13px 16px;border-bottom:0.5px solid var(--border);}
+.pv-sec:last-child{border-bottom:none;}
+.pv-lbl{font-size:9px;color:var(--or);text-transform:uppercase;letter-spacing:.08em;margin-bottom:7px;}
+.pv-tag{display:inline-block;font-size:9px;font-weight:600;padding:2px 7px;border-radius:8px;margin-bottom:5px;}
+.pv-ch-name{font-size:13px;font-weight:600;color:var(--tx);margin-bottom:5px;line-height:1.4;}
+/* Chapter text — full story block */
+.pv-chapter-text{font-size:13px;color:var(--tx2);line-height:1.8;margin-top:8px;}
+.pv-chapter-divider{border:none;border-top:0.5px solid var(--border);margin:10px 0;}
+.pv-workout-block{background:#0a0502;border:0.5px solid var(--border);border-radius:8px;padding:10px 12px;margin-top:8px;}
+.pv-workout-title{font-size:12px;font-weight:600;color:var(--tx);margin-bottom:4px;}
+.pv-workout-desc{font-size:11px;color:var(--tx3);line-height:1.5;white-space:pre-wrap;}
+.pv-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
+.pv-stat{background:#0a0502;border:0.5px solid var(--border);border-radius:8px;padding:8px;}
+.pv-sl{font-size:9px;color:var(--tx3);margin-bottom:3px;}
+.pv-sv{font-size:13px;font-weight:600;color:var(--tx);}
+.pv-sv.highlight{color:var(--or);}
+.pv-notes{font-size:12px;color:var(--tx2);font-style:italic;line-height:1.5;}
+.pv-hist-item{font-size:11px;color:var(--tx3);padding:4px 0;border-bottom:0.5px solid var(--border);line-height:1.4;}
+.pv-footer{padding:10px 16px;background:#07040100;border-top:0.5px solid var(--border);}
+.pv-ft{font-size:9px;color:var(--tx4);}
+
+/* ── AVATAR SVG STYLES ── */
+.ava-wrap{position:relative;}
+</style>
+</head>
+<body>
+
+<!-- AUTH -->
+<div id="auth-screen">
+  <div class="auth-logo">Nada con Ezio</div>
+  <div class="auth-sub">De Florencia a Constantinopla<br>Una sesion a la vez</div>
+  <div class="auth-card">
+    <div class="auth-tabs">
+      <div class="auth-tab on" onclick="authTab('login')">Entrar</div>
+      <div class="auth-tab" onclick="authTab('register')">Registrarse</div>
+    </div>
+    <div id="auth-login">
+      <div class="auth-field"><label>Email</label><input type="email" id="login-email" placeholder="tu@email.com" autocomplete="email"></div>
+      <div class="auth-field"><label>Contrasena</label><input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password"></div>
+      <div class="remember-row"><input type="checkbox" id="remember-me" checked><label for="remember-me">Recordar sesion en este dispositivo</label></div>
+      <button class="auth-btn" onclick="doLogin()">Entrar al Animus</button>
+    </div>
+    <div id="auth-register" style="display:none;">
+      <div class="auth-field"><label>Nickname</label><input type="text" id="reg-nick" placeholder="Ej: EzioMaster" maxlength="20" autocomplete="off"></div>
+      <div class="auth-field"><label>Email</label><input type="email" id="reg-email" placeholder="tu@email.com" autocomplete="email"></div>
+      <div class="auth-field"><label>Contrasena</label><input type="password" id="reg-pass" placeholder="min. 6 caracteres" autocomplete="new-password"></div>
+      <button class="auth-btn" onclick="doRegister()">Crear cuenta</button>
+      <div style="font-size:11px;color:var(--tx4);margin-top:8px;line-height:1.5;">Si ves "rate limit exceeded", espera unos minutos e intentalo de nuevo — Supabase limita los registros por seguridad.</div>
+    </div>
+    <div class="auth-msg" id="auth-msg"></div>
+    <div class="auth-or">— o sin cuenta —</div>
+    <button class="sec-btn" onclick="useLocal()">Usar sin login (datos locales)</button>
+  </div>
+</div>
+
+<!-- ONBOARDING -->
+<div id="onboarding">
+  <div class="ob-card">
+    <div class="ob-title">Bienvenido, Asesino</div>
+    <div class="ob-sub">Elige como configurar tus entrenamientos:</div>
+    <div class="ob-option sel" id="ob-preset" onclick="selectOB('preset')">
+      <h3>Cargar mis entrenos de natacion</h3>
+      <p>Resistencia, Tecnica, Combinado y Tecnica pura — listos para usar.</p>
+    </div>
+    <div class="ob-option" id="ob-blank" onclick="selectOB('blank')">
+      <h3>Empezar desde cero</h3>
+      <p>Sin entrenos predefinidos. Creo los mios cuando quiera.</p>
+    </div>
+    <br>
+    <button class="main-btn" onclick="finishOnboarding()">Empezar aventura</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="app-inner">
+    <div class="left-col">
+      <div class="topbar">
+        <div class="animus-pill"><div class="animus-dot"></div><span class="animus-txt">ANIMUS 2.0 — ACTIVO</span></div>
+        <div class="sync-row">
+          <div><div class="hero-title">Nada con Ezio</div><div class="hero-sub">De Florencia a Constantinopla</div></div>
+          <div><div class="sync-val" id="sync-pct">0%</div><div class="sync-label">sincronizado</div></div>
+        </div>
+        <div class="user-row"><span class="user-email" id="user-email"></span><span class="logout-lnk" onclick="doLogout()">Cerrar sesion</span></div>
+      </div>
+
+      <!-- AVATAR -->
+      <div class="avatar-section">
+        <img class="avatar-img" id="ava-img" src="" alt="Ezio" style="width:72px;height:72px;border-radius:50%;border:2px solid var(--or);object-fit:cover;flex-shrink:0;background:var(--bg3);">
+        <div class="avatar-info">
+          <div class="avatar-era" id="ava-era">AC II — Italia</div>
+          <div class="avatar-name">Ezio Auditore da Firenze</div>
+          <div class="avatar-age" id="ava-age">17 anos · Novato</div>
+        </div>
+      </div>
+
+      <div class="map-section">
+        <div class="map-label">Ruta de Ezio</div>
+        <div id="map-wrap"></div>
+        <div class="prog-wrap">
+          <div class="prog-bg"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+          <div class="prog-labels"><span id="prog-left">0 / 75 sesiones</span><span id="prog-right">0 capitulos</span></div>
+        </div>
+      </div>
+      <div class="chapter-card">
+        <span class="game-tag tag-ac2" id="game-tag">Assassin's Creed II</span>
+        <div class="ch-name" id="ch-name">Florencia, 1476</div>
+        <div class="ch-quote" id="ch-quote">Completa tu primer entreno para desbloquear la historia de Ezio.</div>
+      </div>
+      <div class="stats-row">
+        <div class="stat-box"><div class="stat-n" id="s-ses">0</div><div class="stat-l">Sesiones</div></div>
+        <div class="stat-box"><div class="stat-n" id="s-km">0.0</div><div class="stat-l">Km nadados</div></div>
+        <div class="stat-box"><div class="stat-n" id="s-str">0</div><div class="stat-l">Racha sem</div></div>
+      </div>
+    </div>
+
+    <div class="right-col">
+      <div class="tabs">
+        <div class="tab on" onclick="goTab('log')">Registrar</div>
+        <div class="tab" onclick="goTab('hist')">Historial</div>
+        <div class="tab" onclick="goTab('mw')">Mis entrenos</div>
+        <div class="tab" onclick="goTab('stats')">Stats</div>
+      </div>
+
+      <div id="view-log" class="view on">
+        <div class="notif" id="notif"></div>
+        <div class="slbl">Entreno de hoy</div>
+        <div class="wgrid" id="wgrid"></div>
+        <div class="slbl">Como te has sentido?</div>
+        <div class="fgrid">
+          <div class="fbtn" data-feel="Destruido" onclick="pickFeel(this)">Destruido</div>
+          <div class="fbtn" data-feel="Regular" onclick="pickFeel(this)">Regular</div>
+          <div class="fbtn" data-feel="Bien" onclick="pickFeel(this)">Bien</div>
+          <div class="fbtn" data-feel="Volando" onclick="pickFeel(this)">Volando</div>
+        </div>
+        <div class="slbl">Horario del entreno</div>
+        <div class="time-row">
+          <div class="time-block"><label>Hora inicio</label><input type="time" id="t-start" onchange="calcPace()"></div>
+          <div class="time-block"><label>Hora fin</label><input type="time" id="t-end" onchange="calcPace()"></div>
+        </div>
+        <div class="pace-chip" id="pace-chip"></div>
+        <div class="field-wrap"><textarea id="notes" rows="2" placeholder="Notas: hombro, algo nuevo, como fue el agua..."></textarea></div>
+        <button class="main-btn" id="log-btn" onclick="doLog()" disabled>Sincronizar memoria</button>
+        <button class="ghost-btn" id="preview-btn" onclick="openPreview(null)" style="display:none;">Ver hoja de memoria</button>
+      </div>
+
+      <div id="view-hist" class="view">
+        <div id="hist-list"></div>
+        <p class="empty-msg" id="hist-empty">Ninguna sesion aun. Al agua!</p>
+      </div>
+
+      <div id="view-mw" class="view">
+        <button class="main-btn" onclick="openNewWorkout()">+ Crear entreno</button>
+        <div id="mw-list"></div>
+        <p class="empty-msg" id="mw-empty">No tienes entrenos guardados aun.</p>
+      </div>
+    </div>
+  
+
+      <div id="view-stats" class="view">
+        <div id="stats-content"></div>
+      </div></div>
+</div>
+
+<!-- CUSTOM WORKOUT MODAL -->
+<div class="overlay" id="custom-modal">
+  <div class="modal">
+    <div class="modal-title">Entreno de hoy <span class="modal-close" onclick="closeCustom()">×</span></div>
+    <div class="slbl" style="margin-bottom:6px;">Nombre</div>
+    <div class="field-wrap"><input type="text" id="c-name" placeholder="Ej: Series largas con paletas" autocomplete="off"></div>
+    <div class="slbl" style="margin-bottom:6px;">Distancia (metros)</div>
+    <div class="field-wrap"><input type="number" id="c-dist" placeholder="Ej: 2200" min="100" max="20000"></div>
+    <div class="slbl" style="margin-bottom:6px;">Descripcion del entreno</div>
+    <textarea id="c-desc" rows="4" placeholder="Ej:&#10;250 suave&#10;4x100 Tecnica&#10;3x500 ritmo comodo&#10;200 suave"></textarea>
+    <div class="remember-row" style="margin-bottom:14px;">
+      <input type="checkbox" id="save-workout" checked>
+      <label for="save-workout">Guardar para usar en el futuro</label>
+    </div>
+    <button class="main-btn" onclick="confirmCustom()">Usar este entreno hoy</button>
+  </div>
+</div>
+
+<!-- NEW WORKOUT MODAL -->
+<div class="overlay" id="new-workout-modal">
+  <div class="modal">
+    <div class="modal-title">Nuevo entreno <span class="modal-close" onclick="closeNewWorkout()">×</span></div>
+    <div class="slbl" style="margin-bottom:6px;">Nombre</div>
+    <div class="field-wrap"><input type="text" id="nw-name" placeholder="Ej: Resistencia larga" autocomplete="off"></div>
+    <div class="slbl" style="margin-bottom:6px;">Distancia habitual (metros)</div>
+    <div class="field-wrap"><input type="number" id="nw-dist" placeholder="Ej: 2500" min="100" max="20000"></div>
+    <div class="slbl" style="margin-bottom:6px;">Descripcion</div>
+    <textarea id="nw-desc" rows="5" placeholder="Ej:&#10;250 suave&#10;4x100 Tecnica&#10;3x500 ritmo comodo&#10;200 suave"></textarea>
+    <button class="main-btn" onclick="saveNewWorkout()">Guardar entreno</button>
+  </div>
+</div>
+
+<!-- PDF PREVIEW -->
+<div class="pdf-overlay" id="pdf-overlay">
+  <div class="pdf-topbar">
+    <span class="pdf-topbar-title">Hoja de memoria</span>
+    <span class="pdf-close" onclick="closePDF()">×</span>
+  </div>
+  <div class="pdf-scroll" id="pdf-scroll"></div>
+  <button class="pdf-dl" onclick="downloadPDF()" style="margin:0 16px 16px;">Descargar PDF</button>
+</div>
+
+<script>
+// ── CONFIG ──────────────────────────────────────────────────
+const SUPABASE_URL='https://vxlxvrowjdaqvmmjstpg.supabase.co';
+const SUPABASE_KEY='sb_publishable_Hm1ApuP_GSc95m7OMnDU7A_yyT1-n7G';
+let sb=null;
+try{
+  if(SUPABASE_URL!=='TU_SUPABASE_URL'){
+    sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,storageKey:'ezio_auth'}});
+  }
+}catch(e){console.warn('Supabase init error',e);}
+
+// ── AVATAR DEFINITIONS ──────────────────────────────────────
+const AVA={
+  ac2:'data:image/jpeg;base64,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',
+  bro:'data:image/jpeg;base64,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',
+  rev:'data:image/jpeg;base64,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',
+};
+
+// ── STORY 75 fragments ───────────────────────────────────────
+const STORY=[
+  {game:'AC II',tag:'tag-ac2',title:'Florencia, 1476 — El dia que cambio todo',
+   summary:'Giovanni Auditore es arrestado. Ezio aun no lo sabe.',
+   text:'La manana del 2 de abril de 1476 empieza como cualquier otra en Florencia. El sol sube lento sobre el Arno, los mercaderes abren sus toldos en el Mercato Vecchio, los aprendices de los talleres barren las aceras con ese ritmo cansino de quien sabe que el dia va a ser largo.\n\nEzio Auditore da Firenze tiene diecisiete anos y esta dormido cuando su padre es arrestado. No lo sabe todavia. Esta manana jugara a las cartas con sus amigos en algun callejon del barrio de Santa Croce, discutira sobre una chica, llegara tarde a comer. Nada de lo que hara hoy parece importante.\n\nGiovanni Auditore ha sido acusado de traicion al Estado. Sus hijos Federico y Petruccio tambien. Mientras Ezio duerme, los guardias de los Pazzi rodean la villa familiar. La trampa lleva meses preparandose en las sombras.\n\nEsta es la ultima manana en que el mundo tiene sentido para Ezio de la forma en que lo ha conocido siempre. Todo lo que vendra despues nace de este momento que el no vio llegar. Como casi todos los momentos que cambian una vida: en silencio, sin aviso, mientras dormias.\n\nHoy tu tambien das el primer paso sin saber exactamente a donde lleva. No hace falta saberlo. La historia de Ezio empieza en una manana ordinaria. La tuya tambien empieza hoy.'},
+  {game:'AC II',tag:'tag-ac2',title:'La noche de la ejecucion',
+   summary:'Ezio ve morir a su padre. Toma una decision sin palabras.',
+   text:'La Piazza della Signoria esta llena cuando traen a los condenados. Es medioda y el sol cae con esa crueldad de abril que en Florencia puede ser fria o ardiente segun le plazca. La multitud se ha juntado como siempre se junta la gente ante el espectaculo del poder demostrando que puede.\n\nEzio los ve desde la multitud. A su padre Giovanni, a Federico, a Petruccio. Tres hombres que el conocio como invencibles, como permanentes, como parte del mobiliario inmovible del mundo. Ahi estan, con las manos atadas, mirando al frente.\n\nEzio no puede hacer nada. Grita, intenta moverse, pero el gentio lo empuja, lo aplasta. Los guardias forman un muro. Ve morir a su padre y a sus hermanos en minutos, bajo el sol de medioda, mientras la ciudad sigue funcionando a su alrededor como si nada.\n\nNo llora. Algo dentro de el se congela y al mismo tiempo se endurece. La rabia y el dolor son la misma cosa en ese instante, fundidos en algo que no tiene nombre todavia pero que lo acompanara el resto de su vida.\n\nEsa noche coge a su madre y a su hermana Claudia y huyen de Florencia. El movimiento es lo unico que tiene. Segunda sesion. El cuerpo recuerda antes que la mente. Ya no eres principiante.'},
+  {game:'AC II',tag:'tag-ac2',title:'La fuga — Florencia en llamas',
+   summary:'Ezio corre sin saber trepar bien. El movimiento es lo unico que tiene.',
+   text:'Florencia de noche es otro animal. Mas oscura, mas peligrosa, con sombras que se mueven en los arcos y callejones que durante el dia parecen inofensivos. Los Pazzi han puesto guardias en las salidas de la ciudad. No pueden irse por los caminos normales.\n\nEzio sube por una fachada por primera vez en su vida con proposito real, no por juego. Los dedos le resbalan en la piedra humeda. Los pies buscan huecos que no siempre estan donde espera. Cae una vez. Se levanta. Lo intenta de nuevo con los dientes apretados.\n\nLleva a su madre casi desmayada del shock. Claudia camina en silencio con ese silencio de quien todavia no ha procesado lo que ha visto. Ezio los guia por tejados y azoteas, por callejones que conoce de haberlos recorrido de nino sin saber que algun dia los necesitaria para escapar.\n\nNo es elegante. No es como en las historias que contaban los viejos sobre heroes que saltaban entre tejados con gracia imposible. Es torpe y desesperado y lleno de miedo. Pero funciona. Mientras se mueven, estan vivos. El movimiento es lo unico real.\n\nTercer entreno. El cuerpo empieza a recordar como se mueve en el agua. Todavia no es bonito. Pero avanzas. Eso es lo unico que importa ahora mismo.'},
+  {game:'AC II',tag:'tag-ac2',title:'La carta de Giovanni',
+   summary:'Un legado que llega antes de estar listos para recibirlo.',
+   text:'Antes de que se lo llevasen, Giovanni Auditore dejo algo escondido para Ezio. No mucho, considerando todo: una carta doblada con la tinta corrida por el agua del Arno, un cofre de madera con tres sellos, y un nombre. El nombre de su hermano Mario en Monteriggioni.\n\nEzio lee la carta en la oscuridad de una posada de camino al sur. Su padre habla de una Orden que lleva siglos operando en las sombras. Habla de enemigos que no son simplemente enemigos personales sino algo mas grande, una red que conecta el poder politico con algo mas antiguo y mas oscuro. Habla de un legado que ahora pasa a Ezio.\n\nEzio tiene diecisiete anos y no pidio ninguno de esto. No queria una Orden, no queria enemigos milenarios, no queria un cofre con sellos. Queria a su padre vivo y a sus hermanos en casa y a Florencia siendo lo que era ayer.\n\nPero el legado no pide permiso para llegar. Llega cuando llega, antes de que estemos preparados, antes de que sepamos que hacer con el. La madurez no es el momento en que recibes el peso. Es el momento en que aprendes a cargarlo sin que se note demasiado.\n\nCuarta sesion. El agua te esta dando algo que no pediste tampoco: resistencia, costumbre del esfuerzo, la certeza de que puedes mas de lo que creias. Lo recibas con ganas o no, ya esta cambiando algo en ti.'},
+  {game:'AC II',tag:'tag-ac2',title:'Monteriggioni — La Villa Auditore',
+   summary:'Primera semana. El tio Mario: "Bienvenido a la familia."',
+   text:'La villa de Monteriggioni aparece al atardecer cuando el sol ya es horizontal y tine todo de naranja y sombra larga. Es enorme y antigua y tiene ese aspecto de cosa que ha sobrevivido a demasiado como para que nada mas la sorprenda. Las murallas llevan ahi siglos. Los arboles en el jardin interior son mas viejos que cualquier persona que los haya visto.\n\nMario Auditore los recibe en la puerta como si los estuviera esperando, que de hecho estaba esperando. Es un hombre grande con voz de bajo y manos de quien ha trabajado toda su vida con ellas. Mira a Ezio de arriba abajo con esa mirada calculadora de quien esta tomando medidas para algo que todavia no dice en voz alta.\n\nBienvenido a la familia, le dice. Y aunque Ezio no entiende todavia del todo lo que significa esa frase, nota que tiene un peso especifico. No es un saludo. Es una declaracion de algo.\n\nLa villa sera su base durante anos. Su refugio cuando todo se rompa. El lugar desde el que construira lo que venga. Ezio la mira esa primera noche sin comprender aun la magnitud de lo que implica quedarse.\n\nPrimera semana completada. Tambien tu tienes una base ahora. El agua ya no es un sitio extrano. Es el sitio donde empiezas a construir algo.'},
+  {game:'AC II',tag:'tag-ac2',title:'El primer entrenamiento con Mario',
+   summary:'Aparecer cada manana es el ochenta por ciento.',
+   text:'Mario empieza a entrenar a Ezio al dia siguiente de su llegada. Sin descanso, sin periodo de adaptacion, sin concesiones al hecho de que su sobrino acaba de ver morir a su padre tres dias antes. Con Mario, el duelo y el entrenamiento son la misma cosa.\n\nLe ensenha a moverse diferente. No como un chico de ciudad que corre porque le persiguen, sino como alguien que lee el espacio antes de moverse por el. Le ensenha a ver los tejados como caminos, las sombras como recursos, las paredes como herramientas. El entorno no es un obstaculo: es una red de posibilidades esperando ser leidas.\n\nEzio protesta. Se queja del cansancio, de que no es el momento, de que hay cosas mas urgentes que hacer que saltar vallas al amanecer. Mario escucha todo esto con la paciencia de quien ha oido exactamente las mismas quejas de veinte personas antes que el.\n\nAparece cada manana. No porque sea facil. No porque quiera. Sino porque no aparecer seria admitir que se ha rendido, y eso no esta en la naturaleza de Ezio Auditore aunque el mismo no lo sepa todavia con claridad.\n\nAparecer es el ochenta por ciento. Ya lo sabes. Ya lo estas haciendo: sesion tras sesion, aunque el dia haya sido largo, aunque el hombro moleste, aunque lo ultimo que quieras sea el agua.'},
+  {game:'AC II',tag:'tag-ac2',title:'La armadura del Asesino',
+   summary:'La capa, el guante oculto. No es un disfraz. Es una promesa.',
+   text:'La primera vez que Ezio se pone la ropa de los Asesinos no dice nada. Se queda mirando la capa blanca, el capuchaon, el guante de cuero con el mecanismo oculto en la munheca. Son objetos que pertenecian a su padre. Huelen todavia a Giovanni, o quiza Ezio se lo imagina.\n\nMario le explica el mecanismo del guante. Le explica la filosofia, las dos frases que definen la Orden desde hace siglos. Ezio escucha sin interrumpir, cosa rara en el.\n\nNo es un uniforme, le dice Mario antes de que se lo ponga. No lo uses si no estas dispuesto a lo que implica. La capa no te hace Asesino. Lo que haces con ella, si.\n\nEzio se la pone de todas formas. No porque este completamente seguro, que no lo esta. Sino porque es el siguiente paso visible y el siguiente paso es lo unico que puede manejar ahora mismo. La armadura cambia algo: la postura, la forma de moverse, incluso la forma en que la gente lo mira cuando pasa por el mercado.\n\nNo es un disfraz. Es una promesa que le hace al hombre que todavia no sabe si puede llegar a ser. Septima sesion. Cuando te pones el bano de natacion, algo cambia tambien en ti. El ritual del entrenamiento te convierte en otra persona durante ese tiempo.'},
+  {game:'AC II',tag:'tag-ac2',title:'San Gimignano — Primera mision',
+   summary:'La belleza y el peligro conviven siempre.',
+   text:'La primera mision real lleva a Ezio a San Gimignano, la ciudad de las torres al sur de Florencia. Una ciudad que desde lejos parece una selva de piedra erguida contra el cielo, con sus torres medievales compitiendo en altura como si el prestigio de las familias pudiera medirse en metros de mamposteria.\n\nEzio va a buscar a Vieri de Pazzi, uno de los hombres directamente implicados en la muerte de su familia. Va solo porque Mario insiste en que tiene que aprender a operar solo. Va con un plan que se deshace en los primeros veinte minutos de estar en la ciudad.\n\nLa ciudad es bella y hostil al mismo tiempo. Aprende que las cosas peligrosas raramente parecen peligrosas desde fuera. Que el peligro se esconde exactamente donde esperas normalidad. Que confiar en el aspecto de las cosas es el primer error que comete quien no ha aprendido a mirar bien.\n\nLa mision sale mas o menos bien si el criterio es que Ezio vuelve vivo y con la informacion que necesitaba. Por el resto de criterios, fue un desastre controlado lleno de improvisacion y suerte.\n\nOctava sesion. El agua ya no te resulta extrana. Todavia no sale todo elegante, todavia hay cosas que no encajan del todo. Pero vuelves. Y volver es lo mas importante.'},
+  {game:'AC II',tag:'tag-ac2',title:'Vieri de Pazzi',
+   summary:'La venganza no llena el vacio que esperaba. Pero sigue.',
+   text:'Vieri de Pazzi muere en una calle de San Gimignano con el sol a media altura. Ezio lo ha seguido durante dias, ha aprendido sus rutinas, ha esperado el momento en que la guardia baja aunque sea un segundo.\n\nCuando llega el momento, Ezio actua. No con la elegancia que Mario le ha ensenhado, no todavia, pero actua. Y cuando esta hecho, cuando Vieri esta en el suelo, espera sentir algo que justifique todo lo que ha costado llegar hasta aqui.\n\nNo siente alivio. No siente justicia. Siente un peso que cambia de forma: antes estaba afilado y hacia dano, ahora es sordo y esta en otro sitio. La venganza no llena el vacio que esperaba. Existe el vacio, existe la rabia, pero ya no tiene el mismo filo.\n\nRequiescat in pace, dice Ezio. Y lo dice en serio aunque no entienda del todo por que. Lo aprende aqui: que incluso los enemigos merecen ese gesto final. Que la crueldad no es parte del codigo, aunque la necesidad a veces si.\n\nNovena sesion. Sigue. Incluso cuando no sientes lo que esperabas sentir. Incluso cuando el resultado no se parece al que imaginabas. El valor del entrenamiento no esta en como te sientes al terminar. Esta en que terminas.'},
+  {game:'AC II',tag:'tag-ac2',title:'Florencia — La ciudad de los Medici',
+   summary:'Diez sesiones. La ciudad es la misma pero el ya no.',
+   text:'Ezio vuelve a Florencia con ojos distintos. La ciudad es identica en todo: el mismo Arno marron y lento, las mismas calles adoquinadas con los mismos comerciantes en los mismos puestos, el mismo olor a levadura y curtido y piedra mojada que tiene Florencia siempre.\n\nPero el que la mira ha cambiado. Camina diferente sin saber exactamente como explicarlo. Mas atento a las salidas, a las sombras, a las personas que miran sin que parezca que miran. Mario le dijo que desarrollaria esto, ese sexto sentido del espacio y el peligro. Tiene razon.\n\nLos Medici gobiernan Florencia con una mezcla de generosidad calcula y autoridad firme. Lorenzo de Medici, el Magnifico, es el hombre mas poderoso de la ciudad y uno de los hombres mas interesantes de Europa. Ezio aprende a moverse en sus circulos sin pertenecer del todo a ellos.\n\nAprende que el poder tiene sus propias cortesias, sus propias lealtades, sus propias formas de traicion que no siempre parecen traicion desde fuera. El mundo politico de Florencia es un teatro con actores que llevan mascaras tan bien puestas que a veces ellos mismos olvidan la cara que tienen debajo.\n\nDiez sesiones. Llevas casi tres semanas. Algo ha cambiado en tu cuerpo aunque no lo veas todavia en el espejo. Esta cambiando desde dentro, capa por capa, como cambian las cosas que importan.'},
+  {game:'AC II',tag:'tag-ac2',title:'Leonardo da Vinci',
+   summary:'Leonardo ve algo en Ezio que Ezio aun no ve en si mismo.',
+   text:'Leonardo da Vinci tiene el taller mas caotico de Florencia y probablemente de Italia. Hay bocetos por todas partes: alas mecanicas, estudios anatomicos, planos de maquinas que no existen todavia, mapas vistos desde un angulo que ninguna persona ha tenido nunca porque ninguna persona ha volado nunca.\n\nEzio llega con el guante danado y sale con algo que no es exactamente lo mismo que entro. Leonardo lo arregla, lo mejora, anade un segundo mecanismo. Lo hace con la eficiencia casual de quien para quien esto es un martes normal.\n\nPero lo que mas sorprende a Ezio no es el talento de Leonardo, que es obvio. Es la forma en que lo mira. Como si estuviera viendo algo que Ezio mismo no puede ver desde dentro. Como si calculara algo.\n\nTienes algo, le dice Leonardo en un momento, sin explicar el que. No lo desperdicies. Y sigue trabajando sin esperar respuesta, como si lo hubiera dicho para el mismo tanto como para Ezio.\n\nOnce sesiones. El entrenamiento te esta cambiando aunque no lo notes aun desde dentro. Alguien que te viera desde fuera, alguien con los ojos de Leonardo, ya lo notaria. La diferencia esta ahi. Solo hay que saber donde mirar.'},
+  {game:'AC II',tag:'tag-ac2',title:'El taller de Leonardo',
+   summary:'La mente y el cuerpo son lo mismo.',
+   text:'El taller de Leonardo huele a aceite de linaza, a carbon, a algo quimico que Ezio no sabe identificar pero que con el tiempo asociara para siempre con las conversaciones mas interesantes de su vida.\n\nSe quedan hablando muchas tardes. Leonardo le explica la mecanica del movimiento humano con la misma precision con que explicaria un mecanismo de relojeria. Le habla de como los musculos trabajan en cadena, de como el equilibrio no es estatico sino una correccion continua, de como el cuerpo aprende patrones que luego ejecuta sin que la mente tenga que intervenir.\n\nLa mente y el cuerpo son lo mismo, le dice Leonardo una tarde. Si entrenas solo el cuerpo sin entrenar la mente, eres un animal competente. Si entrenas solo la mente sin el cuerpo, eres un fantasma inteligente. Juntos son otra cosa. Son un Asesino.\n\nEzio lo escucha y guarda estas palabras en algun lugar del que no sabe el nombre todavia. No las entiende del todo de inmediato. Las entendera con el tiempo, cuando el cuerpo y la mente empiecen a funcionar como una sola cosa sin que el tenga que pedirles que lo hagan.\n\nDoce sesiones. Tu lo estas entendiendo en el agua. El esfuerzo fisico limpia el ruido mental. La concentracion en la tecnica te da un silencio que fuera del agua cuesta encontrar.'},
+  {game:'AC II',tag:'tag-ac2',title:'Venecia — La ciudad sobre el agua',
+   summary:'Sin suelo firme, pero en pie desde hace siglos.',
+   text:'Venecia no deberia existir y sin embargo existe con una obstinacion que raya en lo teologico. Una ciudad construida sobre estacas clavadas en el fango de una laguna, rodeada de agua por todos lados, sin tierra firme a menos de varios kilometros. Deberia haberse hundido hace siglos. Lleva ahi mas de mil anos.\n\nEzio llega en gondola al amanecer y la ciudad aparece ante el como algo sacado de una vision o de un suenho muy preciso. Las fachadas de palacio reflejadas en el agua del canal, el olor a sal y a madera podrida y a especias, el sonido de los remos y de las campanas mezclado de una forma que no ocurre en ninguna otra ciudad del mundo.\n\nAprende rapido que Venecia tiene sus propias reglas. Que los canales no son obstaculos sino el sistema de transporte principal. Que la arquitectura que desde tierra parece un laberinto desde los tejados es perfectamente legible. Que cada ciudad tiene su logica interna y que encontrarla es la diferencia entre sobrevivir en ella o perderse.\n\nComo alguien sin base fisica perfecta que aprende a moverse en el agua. Al principio todo parece un laberinto: la respiracion, los brazos, las piernas. Luego encuentras la logica. Y cuando la encuentras, la ciudad se vuelve tuya.\n\nTrece sesiones. Sin suelo firme, pero en pie.'},
+  {game:'AC II',tag:'tag-ac2',title:'El Carnaval de Venecia',
+   summary:'A veces el mejor disfraz es la confianza.',
+   text:'El Carnaval de Venecia dura semanas y transforma la ciudad en algo completamente distinto de lo que es el resto del ano. Mascaras por todas partes, identidades intercambiables, el permiso social para ser quien quieras ser durante un tiempo limitado. La ciudad entera juega a ser otra cosa.\n\nEzio aprende aqui algo que Mario no le ha ensenhado explicitamente pero que es quiza mas util que cualquier tecnica de combate: el arte de la invisibilidad visible. No esconderse, sino mezclarse. No ser nadie especial en un sitio lleno de gente especial.\n\nSe mueve entre la multitud del Carnaval con las mascaras que cambia segun necesita. Aprende que en un sitio donde todo el mundo lleva mascara, el que mas se nota es el que no la lleva. Que la mejor forma de pasar desapercibido en ciertos contextos es exactamente no intentar pasar desapercibido.\n\nEl mejor disfraz es la confianza, le dira alguien ese semana. Si caminas como si tuvieras toda la razon de estar donde estas, nadie te pregunta por que estas. La duda se nota. La certeza tambien.\n\nDecimocuarta sesion. Ya tienes mas confianza en el agua que el primer dia. La diferencia entre el primer largo y el de hoy no es solo fisica. Es que ya sabes que puedes.'},
+  {game:'AC II',tag:'tag-ac2',title:'Antonio y los ladrones',
+   summary:'Un mes de trabajo continuo. Nadie llega solo.',
+   text:'Antonio de Magianis no es el tipo de aliado que Ezio habria elegido si le hubieran dado un catalogo. Es el lider de los ladrones de Venecia, un hombre de cincuenta anos con cicatrices en las manos y la cara que guardan la historia de decisiones que no salieron exactamente como se planeaban.\n\nPero en esta guerra los aliados no se eligen. Aparecen. Y Antonio conoce Venecia de una forma que Ezio tardaria anos en aprender por su cuenta: los callejones que no aparecen en ningun mapa, las casas con salidas traseras, los guardias que se pueden comprar y los que es mejor evitar.\n\nEzio aprende aqui una leccion que revisara muchas veces a lo largo de su vida: que el conocimiento util no esta siempre donde el prestigio dice que esta. Que los que viven en los margenes saben cosas que los del centro nunca sabran porque nunca han necesitado saberlas.\n\nNadie llega solo a ningun sitio que valga la pena. La Hermandad de Asesinos no existe porque un hombre sea muy competente. Existe porque muchos hombres y mujeres muy distintos decidieron que habia algo mas importante que sus diferencias.\n\nQuince sesiones. Un mes entero de trabajo continuo. El habito ya esta plantado. Ya no tienes que decidir si vas: simplemente vas.'},
+  {game:'AC II',tag:'tag-ac2',title:'Los tejados de Venecia',
+   summary:'Cuando encuentras el ritmo, todo parece mas facil.',
+   text:'Venecia de noche desde los tejados es una de las experiencias mas extranas y mas hermosas que Ezio ha tenido. La ciudad desde arriba es completamente diferente a la ciudad desde el suelo: un mapa de agua negra y tejados rojos, puentes que conectan islas, el Gran Canal brillando con el reflejo de las antorchas y la luna.\n\nAprende los ritmos del movimiento por altura. Donde la distancia entre tejados es saltable y donde no. Donde hay que bajar y usar el agua, que en Venecia siempre esta ahi como una opcion. Donde una cornisa aguanta y donde no. Lo aprende con el cuerpo, no con la teoria, que es la unica forma en que algunas cosas se aprenden de verdad.\n\nY algo cambia cuando encuentra ese ritmo. El esfuerzo fisico sigue siendo el mismo, pero se siente diferente. Se siente posible de una manera nueva, como cuando en la natacion la respiracion de repente encaja y el largo que antes costaba tres ahora cuesta uno y medio.\n\nNo es que se vuelva facil. Es que ya sabes que puedes. Y eso es completamente distinto a que sea facil.\n\nDecimosexta sesion. Cuando encuentras el ritmo en el agua, todo cambia. No la dificultad: la relacion con la dificultad. Sigue siendo duro. Pero ya es tuyo.'},
+  {game:'AC II',tag:'tag-ac2',title:'Emilio Barbarigo',
+   summary:'El entrenamiento se nota. El tuyo tambien.',
+   text:'Emilio Barbarigo controlaba los muelles de Venecia con una brutalidad que sus lideres en Roma aprobaban tacitamente. Impuestos ilegales sobre cada carga que entraba o salia. Trabajadores que desaparecian si protestaban. Una red de intimidacion tan establecida que la gente la habia aceptado como parte del paisaje, como se acepta la lluvia o el frio.\n\nCuando Ezio lo neutraliza, la mision es limpia. No perfecta, que la perfeccion en estas cosas es una ilusion, pero si limpia. Sin los tropiezos de las primeras semanas, sin la improvisacion desesperada de San Gimignano. Hay un plan, el plan se ejecuta, el objetivo cae.\n\nMario, cuando se lo cuenta despues, asiente sin sorpresa. Era hora, dice. Y lo dice de una forma que implica que ha estado esperando que Ezio llegara a este punto, no que el punto haya llegado antes de lo esperado.\n\nEl entrenamiento se nota cuando dejas de notarlo tu mismo. Cuando el movimiento que antes requeria pensamiento consciente ya ocurre solo, cuando el cuerpo ejecuta antes de que la mente haya terminado de formular la orden.\n\nDecimoseptima sesion. El entrenamiento se nota en ti tambien. En los hombros, en la respiracion, en como tes mueves fuera del agua. Esta ahi aunque no lo veas todavia.'},
+  {game:'AC II',tag:'tag-ac2',title:'La traicion dentro de la traicion',
+   summary:'El camino es largo. Pero ya no asusta la distancia.',
+   text:'La lista de responsables de la muerte de su familia resulta ser mas larga de lo que Ezio penso al principio. Detras de los Pazzi hay otros. Detras de esos, mas. La red se extiende hacia arriba y hacia atras en el tiempo mas de lo que un chico de diecisiete anos criado en la abundancia de una familia noble podria haber imaginado.\n\nPor primera vez Ezio siente algo que no es exactamente miedo pero que se le parece desde cierto angulo: el cansancio moral de quien entiende que el camino es mucho mas largo de lo que esperaba cuando empezo. Que el horizonte retrocede a medida que avanzas.\n\nMario lo ve y le dice algo que tardara anos en entender del todo: Si buscas el final, te perdes en la busqueda del final. Busca el siguiente paso. Solo el siguiente. El final llega solo cuando llega.\n\nEs el consejo mas util que recibira en anos. No pensar en el mapa completo. No obsesionarse con cuanto queda. Solo con lo que hay delante, con el movimiento inmediato, con la accion posible ahora mismo.\n\nDecimoctava sesion. El camino es largo. Pero ya no asusta la distancia. Solo importa el largo siguiente, la semana siguiente, la sesion siguiente. Una a la vez.'},
+  {game:'AC II',tag:'tag-ac2',title:'Marco Barbarigo',
+   summary:'La paciencia es tan importante como la velocidad.',
+   text:'Marco Barbarigo es diferente a todos los objetivos anteriores. Es cauteloso de una forma metodica, no instintiva: cambia sus rutas cada dos dias, nunca come en el mismo lugar dos veces seguidas, tiene guardias que se turnan en patrones irregulares dificiles de memorizar.\n\nEzio aprende a esperar. No pasivamente, sino con la atencion tensa de quien sabe que el momento llegara y quiere estar listo cuando llegue. Observa durante dias. Aprende los matices de los patrones incluso cuando los patrones intentan no serlo. Encuentra el hilo.\n\nEl momento llega durante una fiesta en el Gran Canal. Marco Barbarigo en una gondola, rodeado de musica y vino y disfraces de Carnaval. Nadie esperaria que ahi, en ese momento de festejo ruidoso, ocurriera algo que cambiara el equilibrio de poder en Venecia.\n\nEzio estaba listo. No por suerte: por semanas de preparacion silenciosa que nadie vio. La mision fue limpia precisamente porque habia sido lenta.\n\nLa paciencia es tan importante como la velocidad. En el agua tambien: el largo que nadas con control y sin prisa vale mas que tres largos con urgencia que te dejan sin aire. Diecinueve sesiones.'},
+  {game:'AC II',tag:'tag-ac2',title:'La Serenissima',
+   summary:'Veinte sesiones. La serenidad no es ausencia de esfuerzo.',
+   text:'Venecia se llama a si misma La Serenissima desde hace tanto que ya nadie recuerda cuando empezo a llamarse asi. La muy serena. Es un nombre que al principio parecia ironico a Ezio, dado que Venecia es todo menos serena: intrigas politicas, comercio agresivo, una competencia entre familias que nunca deja de hervir bajo la superficie.\n\nPero con el tiempo entiende el nombre. La serenidad de Venecia no es la ausencia de conflicto. Es la capacidad de seguir funcionando, de seguir siendo bella y rica y poderosa, a pesar del conflicto. Es la serenidad del que ha decidido no dejar que las tormentas lo definan.\n\nLa serenidad no es ausencia de esfuerzo. Es presencia de proposito. Es saber por que haces lo que haces con suficiente claridad como para que el esfuerzo no te quite el sueno.\n\nEzio lleva meses en esto. Ya no es el chico que huia de Florencia con su familia en brazos. Sigue siendo joven, sigue cometiendo errores, sigue teniendo mucho que aprender. Pero sabe por que esta aqui. Eso cambia todo.\n\nVeinte sesiones. Llevas mas de un mes y medio. Ya no es un comienzo: es una parte de lo que eres. El habito ya tiene raices.'},
+  {game:'AC II',tag:'tag-ac2',title:'Hacia Roma — El camino al Papa',
+   summary:'Los objetivos grandes se dividen en pasos.',
+   text:'El rastro lleva a Roma. A Rodrigo Borgia, el Cardenal que sera Papa antes de que acabe el ano y que ya actua como si lo fuera desde hace tiempo. Es el objetivo mas grande que Ezio ha imaginado nunca: el hombre mas poderoso de la Iglesia Catolica, con ejercitos y oro y la autoridad moral de la fe de millones.\n\nEzio mira ese objetivo y por primera vez desde que empezo este camino siente algo parecido al vertigo. No miedo exactamente, sino la conciencia de la escala. De lo pequeno que es un hombre solo frente a lo que representa Rodrigo Borgia.\n\nMario lo mira cuando le confiesa esto y no lo consuela de la forma que Ezio esperaba. En cambio le pregunta: cuantos pasos hay entre aqui y Roma. Ezio cuenta. Luego Mario le pregunta si puede dar el primero. Ezio puede. Entonces da el primero, dice Mario. Los demas llegaran.\n\nLos objetivos grandes no se consiguen de golpe. Se consiguen paso a paso, largo a largo, sesion a sesion, hasta que un dia miras atras y lo que parecia imposible esta ya detras de ti.\n\nVeintiuna sesion. Los objetivos grandes se dividen en pasos. El siguiente paso es lo unico que importa ahora.'},
+  {game:'AC II',tag:'tag-ac2',title:'La Secta de los Templarios',
+   summary:'El enemigo real siempre es mas grande de lo que parece.',
+   text:'La arquitectura de la conspiracion empieza a tomar forma completa en la mente de Ezio. Los Pazzi eran herramientas. Rodrigo Borgia es el lider visible. Pero hay algo mas grande detras: una organizacion que lleva siglos trabajando con una paciencia y una coherencia que ninguna familia individual podria sostener.\n\nLos Templarios no son una conspiracion reciente. Son una idea antigua sobre como debe funcionar el mundo: que el orden debe ser impuesto por los que saben, que la libertad es peligrosa, que el control centralizado es la unica forma de evitar el caos.\n\nEzio entiende que no esta luchando contra hombres. Los hombres mueren y sus organizaciones se reorganizan bajo nuevos lideres. Esta luchando contra una idea. Y las ideas son mucho mas dificiles de matar que los hombres que las sostienen.\n\nLos Asesinos, con su lema de que nada es verdad y todo esta permitido, son exactamente lo contrario: la defensa del caos productivo, de la libertad individual, del derecho a pensar diferente aunque ese pensamiento sea incomodo.\n\nVeintiuna sesion. Tu enemigo al principio era el sofa. Tu idea tuya propia de que no podias. Ya lo estas matando, sesion a sesion.'},
+  {game:'AC II',tag:'tag-ac2',title:'El Codice de Altair',
+   summary:'"El limite esta en tu mente, no en tu cuerpo."',
+   text:'Mario le muestra a Ezio las paginas del Codice de Altair Ibn-La Ahad. Son fragmentos de un texto mayor escrito trescientos anos atras por el primer gran Maestro de la Orden de los Asesinos, el hombre que reformo la Hermandad y le dio el codigo que todavia siguen.\n\nAltair escribio sobre combate, si, pero sobre todo escribio sobre filosofia. Sobre el significado de Nada es verdad, todo esta permitido. Sobre el tipo de hombre que tiene que ser un Asesino, que es diferente al tipo de hombre que tiene que ser un soldado o un sacerdote o un mercader.\n\nHay una frase que Ezio lee y relee hasta que se le queda grabada sin que lo haya intentado: El limite no esta en el mundo. Esta en lo que creemos posible. Cuando cambia lo que creemos posible, cambia lo que es posible.\n\nTarda anos en entenderla completamente. Pero empieza a entenderla aqui, en la biblioteca de la villa de Monteriggioni, con las paginas amarillentas de Altair entre las manos y el polvo de siglos flotando en el rayo de sol de la ventana.\n\nEl limite esta en tu mente, no en tu cuerpo. Veintitres sesiones. Ya lo sabes. Ya lo estas empujando cada vez que entras al agua.'},
+  {game:'AC II',tag:'tag-ac2',title:'El asalto al Vaticano',
+   summary:'Ha llegado tan lejos que solo calcula el siguiente paso.',
+   text:'El Vaticano es la fortaleza mas protegida de Europa en el siglo quince. Muros que llevan siglos sin ser violados. Guardias Suizos entrenados desde la infancia. La autoridad de la Iglesia como escudo invisible mas poderoso que cualquier muro fisico.\n\nEzio lo estudia durante dias. Habla con gente que ha trabajado dentro. Consigue planos que probablemente no deberian existir. Mario le advierte de lo que le espera. Machiavelo, al que conocio recientemente, le dice con su franqueza caracteristica que lo mas probable es que muera.\n\nEzio entra de todas formas. Solo, porque no hay otro modo. Tiene que llegar a Rodrigo Borgia, y Rodrigo Borgia esta ahi dentro. La logica de la situacion es asi de simple y asi de imposible al mismo tiempo.\n\nLo que lo sorprende cuando ya esta dentro es que no siente miedo. En otra vida, en el Ezio de Florencia que jugaba a las cartas y corria detras de chicas, habria sentido panico. Este Ezio simplemente calcula el siguiente paso. Ya no hay espacio para el miedo: esta lleno de enfoque.\n\nVeinticuatro sesiones. Solo el largo siguiente. Solo la proxima semana. El miedo desaparece cuando el enfoque lo llena todo.'},
+  {game:'AC II',tag:'tag-ac2',title:'Rodrigo Borgia — El Papa Templario',
+   summary:'Veinticinco sesiones. Hay sabiduria que el Ezio de Florencia no habria tenido.',
+   text:'He trabajado toda mi vida para esto, grita Rodrigo Borgia cuando Ezio lo confronta en la camara bajo el Vaticano. Hay algo casi patetico en ese grito, en ese hombre viejo que creia tener todo calculado y que ve como el calculo falla en el momento crucial.\n\nEzio tiene al Papa en sus manos. Podria acabar aqui. Todo lo que ha perdido, todo lo que ha sufrido desde aquella manana en Florencia, senala hacia este gesto final. La rabia de cuatro anos de perdida y esfuerzo empuja en esa direccion.\n\nPero algo en el se detiene. Una comprension que no habia tenido antes: que matar a Rodrigo Borgia no mata lo que Rodrigo Borgia representa. La idea sigue viva aunque el hombre muera. La organizacion se reorganizara bajo otro lider. El sacrificio de su familia, si acaba aqui, no habra servido para nada duradero.\n\nEsa decision, esa fraccion de segundo de sabiduria que el Ezio de diecisiete anos nunca habria tenido, es la prueba mas clara de todo lo que el camino ha cambiado en el. No solo sus habilidades. Su forma de pensar sobre lo que importa.\n\nVeinticinco sesiones. Tu tambien eres diferente al que entro al agua el primer dia. No solo mas fuerte: diferente.'},
+  {game:'AC II',tag:'tag-ac2',title:'La Camara del Precursor',
+   summary:'A veces entrenar te lleva a descubrir cosas que no esperabas.',
+   text:'Bajo el Vaticano hay algo que no deberia estar ahi. Una camara que no aparece en ningun plano, construida con una tecnica que no corresponde al siglo quince ni al catorce ni al trece. Con una tecnica que no corresponde a ninguna epoca que Ezio pueda identificar.\n\nAbre la camara con el Fruto del Eden. Y lo que encuentra dentro no tiene ninguna explicacion que encaje con todo lo que Ezio ha aprendido sobre el mundo. Una figura de luz que habla en varios idiomas a la vez. Que dice llamarse Minerva. Que dice ser de antes, de mucho antes, de una civilizacion que existio antes de la humanidad tal como la conocemos.\n\nEzio esta de pie en el sitio mas extrano en el que ha estado nunca, que es mucho decir dado todo lo que ha visto, y escucha. Porque que otra cosa puede hacer.\n\nA veces el entrenamiento te lleva a descubrir cosas sobre ti mismo que no esperabas. Sobre tu resistencia cuando creias que no te quedaba nada. Sobre tu capacidad de seguir cuando todo decia que pararас. Sobre quien eres realmente cuando se quitan todas las excusas.\n\nVentiseis sesiones. El fondo siempre esta mas alla de donde creias.'},
+  {game:'AC II',tag:'tag-ac2',title:'Minerva habla',
+   summary:'Hay cosas que hacemos cuyos frutos no veremos de inmediato.',
+   text:'No somos dioses, Ezio. Somos como tu. Somos carne y hueso y miedo y error. Somos exactamente como tu. Minerva habla durante minutos en esa camara subterranea, y cada palabra tiene el peso de algo que lleva milenios esperando ser dicho.\n\nLe da un mensaje. Le explica que el mensaje no es para el. Que el es el mensajero, no el destinatario. Que alguien en el futuro necesitara escuchar esto. Que Ezio es el puente entre un pasado que ya paso y un futuro que todavia no ha llegado.\n\nEzio sale de la camara con mas preguntas de las que entro. No sabe si lo que acaba de vivir es real en el sentido en que el mundo es real o si es otra cosa, algo para lo que no tiene palabras todavia. Acepta la incertidumbre. Ha aprendido que no todo necesita ser resuelto para ser util.\n\nHay cosas que hacemos cuyos frutos no veremos de inmediato. Cada sesion planta algo que no sabe exactamente cuando florecera. Pero florece. Siempre florece, aunque tarde mas de lo que esperabas.\n\nVentisiete sesiones. Planta. El resto llega solo.'},
+  {game:'AC II',tag:'tag-ac2',title:'El regreso a Monteriggioni',
+   summary:'Solo silencio y una calma que no habia sentido antes.',
+   text:'Ezio vuelve a Monteriggioni. La villa que fue su refugio cuando huia, que se convirtio en su base, que vio como pasaba de chico asustado a algo que todavia no sabe exactamente como llamar.\n\nSe sienta en el jardin al atardecer. El mismo jardin donde Mario lo entrenaba al amanecer, donde aprendio a moverse de la forma que mueve ahora. Los mismos arboles, la misma piedra, la misma luz naranja de final de tarde sobre los tejados.\n\nHace tres anos que su padre murio. Tres anos. Parece a la vez una eternidad y un parpadeo. Ha hecho en tres anos cosas que la mayoria de hombres no hacen en toda una vida. Ha perdido cosas que no se recuperan. Ha ganado cosas que no sabia que se podian ganar.\n\nNo hay celebracion. No hay fuegos artificiales ni discursos. Solo el silencio del jardin, el sonido de los grillos, y una calma interior que Ezio no habia sentido en anos. Quiza nunca. La calma del que ha cumplido con lo que prometio, aunque lo que queda todavia sea mucho.\n\nVentiocho sesiones. Ese silencio al salir del agua. Ese momento despues del ultimo largo cuando el cuerpo todavia vibra y la mente esta completamente callada. Eso.'},
+  {game:'AC II',tag:'tag-ac2',title:'Una nueva generacion',
+   summary:'Lo que has acumulado ya no es solo tuyo.',
+   text:'Jovenes llegan a Monteriggioni buscando a Ezio. Han oido hablar de el, de lo que ha hecho, de quien se ha convertido. Quieren aprender. Algunos vienen de Florencia, algunos de Venecia, uno de tan al sur como Napoles.\n\nEzio los mira y por un momento no sabe que hacer con ellos. Sigue sintiendose en muchos sentidos el chico de diecisiete anos que huia de Florencia. Y ahora hay gente que quiere aprender de el como Mario aprendio de quien aprendio Mario.\n\nEmpieza a entrenarlos. No porque sepa perfectamente como hacerlo, sino porque es lo que hay que hacer. Y descubre algo en el proceso: que ensenhar es la mejor forma de aprender. Que cuando explicas lo que sabes a alguien que no lo sabe, entiendes por primera vez por que funciona lo que funciona.\n\nLo que ha acumulado ya no le pertenece solo a el. Tiene su propia logica que lo empuja a propagarse, a multiplicarse, a convertirse en algo mas grande que cualquier individuo.\n\nVentinueve sesiones. Lo que ganas en el agua no es solo tuyo tampoco. Cambia como te mueves fuera del agua, como descansas, como enfrentas otras dificultades.'},
+  {game:'AC II',tag:'tag-ac2',title:'AC II completado — El maestro joven',
+   summary:'Treinta sesiones. Ezio sale siendo algo diferente.',
+   text:'Ezio Auditore da Firenze tiene veintiun anos al final de AC II. Cuatro anos despues de aquella manana en que todo cambio, cuatro anos de entrenamiento y mision y perdida y aprendizaje, esta de pie en Monteriggioni mirando el mapa del siguiente capitulo.\n\nEntro en esto con diecisiete anos, con rabia, con dolor, con un proposito que era simple y personal: venganza. Sale siendo algo diferente. No sin rabia, que la rabia sigue ahi en algun lugar, pero transformada en algo que tiene mas forma y mas utilidad. No sin dolor, que el dolor de perder a su familia es permanente. Pero el dolor ya no lo define.\n\nSale siendo un Asesino. Y mas que eso: un hombre que empieza a entender que su historia personal es parte de algo mucho mas grande. Que la razon por la que hace lo que hace ha cambiado desde aquella manana en Florencia, y que ese cambio es lo unico que hace que todo lo que ha costado valga algo.\n\nLa trilogia tiene tres actos. El primero acaba aqui. El segundo empieza en Roma, anos despues, con todo lo que Ezio ha construido a punto de ser destruido en una sola noche.\n\nTreinta sesiones. El primer acto de tu aventura tambien esta completado. Mira atras: ya eres otro.'},
+  {game:'Brotherhood',tag:'tag-bro',title:'Roma, 1499 — El ataque',
+   summary:'Sesion 31. Todo lo construido en ruinas en una noche.',
+   text:'Cesare Borgia ataca Monteriggioni de noche. Lo hace con un ejercito, con artilleria, con la brutalidad de alguien que no necesita justificarse ante nadie porque ha decidido que nadie tiene autoridad para pedirle cuentas.\n\nEzio tiene treinta y seis anos cuando empieza Brotherhood, que quizas suene mucho pero que para un Asesino que lleva dos decadas activo es solo el comienzo de la madurez. Esa noche pierde dos cosas al mismo tiempo: la villa que fue su base durante anos y a su tio Mario, que muere en el asalto con la velocidad cruel con que mueren las personas que creemos que son permanentes.\n\nEzio huye herido con su madre y Claudia. Por segunda vez en su vida tiene que correr y dejar atras todo lo que conocia. Pero esta vez es diferente. Esta vez sabe quien es. Esta vez no huye hacia algo desconocido: huye con un plan que todavia no tiene todos los detalles pero que ya tiene la direccion.\n\nRoma. La ciudad del enemigo. El sitio donde hay que ir exactamente cuando parece que hay que huir.\n\nSesion treinta y uno. Un nuevo capitulo. Nuevas reglas. La misma voluntad de estar aqui.'},
+  {game:'Brotherhood',tag:'tag-bro',title:'La herida',
+   summary:'Volver al lugar donde todo se rompio para repararlo.',
+   text:'Roma recibe a Ezio con el olor a piedra caliente y a polvo y a ese rio Tiber que no es el Arno pero que tampoco es tan diferente cuando lo miras desde el borde en la oscuridad de una noche de verano.\n\nSe esta recuperando de las heridas del asalto a Monteriggioni. Una herida en el pecho que podria haber matado a un hombre menos entrenado o con menos voluntad de seguir vivo. Passa dias en un refugio que le proporciona una red de contactos que aun no conoce del todo.\n\nLa ironia de curar las heridas en la ciudad del enemigo no se le escapa. Roma es donde Rodrigo Borgia fue Papa, donde los Borgia tienen sus raices mas profundas, donde el peligro es mas concentrado que en cualquier otro lugar de Italia. Y es exactamente donde tiene que estar.\n\nHay algo que aprende aqui sobre la recuperacion: que no es solo fisica. Que el cuerpo sana con un ritmo propio que no acepta urgencias. Que forzar la recuperacion la retrasa. Que a veces la accion correcta es esperar y dejar que el tiempo haga lo que solo el tiempo puede hacer.\n\nTreinta y dos sesiones. Sigues. Aunque el hombro moleste, aunque el dia haya sido largo. Sigues.'},
+  {game:'Brotherhood',tag:'tag-bro',title:'Roma corrupta',
+   summary:'Cuenta los pasos. No se acobarda.',
+   text:'Roma bajo los Borgia es una ciudad con miedo instalado en los huesos. No el miedo agudo de un peligro inmediato, sino el miedo cronico de quien ha aprendido que hablar de mas tiene consecuencias, que protestar abiertamente es peligroso, que la cabeza baja es la posicion mas segura para vivir.\n\nHay torres de control en cada barrio. Desde ellas los soldados ven todo el vecindario, senalan a quien se mueve con demasiada libertad, garantizan que la presencia del poder sea visible e inevitable. El miedo como instrumento de control: si siempre estas siendo observado, acabas comportandote como si lo estuvieras aunque no lo estes.\n\nEzio camina por estas calles y hace lo que Mario le enseno hace anos: cuenta. Cuenta los pasos entre la torre y la siguiente posicion cubierta. Cuenta los turnos de los guardias. Cuenta los callejones que llevan a alguna parte. El trabajo del Asesino antes de actuar es el trabajo del contador: datos, patrones, posibilidades.\n\nNo se acobarda ante la escala del problema. Tampoco lo subestima. Simplemente lo divide.\n\nTreinta y tres sesiones. Una torre a la vez. Un largo a la vez. Un dia a la vez.'},
+  {game:'Brotherhood',tag:'tag-bro',title:'La Hermandad de los Asesinos',
+   summary:'Personas que han perdido algo, que tienen rabia convertida en proposito.',
+   text:'Esta vez Ezio no puede hacerlo solo. Lo sabe desde el principio, que es una de las diferencias mas importantes entre el Ezio de AC II y el de Brotherhood: ha aprendido que el individualismo heroico tiene un limite practico muy concreto.\n\nRoma es demasiado grande. El problema es demasiado profundo. Los Borgia tienen demasiados recursos. Una sola persona, por muy bien entrenada que este, no puede desmantelar un sistema de control que afecta a toda una ciudad de cientos de miles de habitantes.\n\nEmpieza a reclutar. Busca en los mercados, en las tabernas, en las carceles de donde los saca cuando puede. Busca personas que han perdido algo por los Borgia, que tienen rabia que no saben donde poner, que necesitan que esa rabia tenga un proposito mas grande que ellos mismos.\n\nLos encuentra. Mas de los que esperaba. Resulta que Roma esta llena de gente que ha estado esperando que alguien les dijera que el miedo no tiene que ser para siempre.\n\nTreinta y cuatro sesiones. Nadie llega solo a ningun sitio que valga la pena.'},
+  {game:'Brotherhood',tag:'tag-bro',title:'Las torres de los Borgia',
+   summary:'Treinta y cinco sesiones. Cada brazada te devuelve algo.',
+   text:'Las torres de los Borgia son el simbolo mas visible del control. Altas, oscuras, imposibles de ignorar. Desde ellas los soldados ven todo. Desde ellas se recuerda constantemente a la poblacion quien tiene el poder y quien no.\n\nEzio empieza a eliminarlas una a una. No todas de golpe porque eso es imposible logisticamente y porque el golpe visual de hacerlas caer de una en una es mas efectivo que hacerlo todo al mismo tiempo. Cada torre que cae manda un mensaje que se oye en toda la ciudad sin que nadie tenga que decirlo en voz alta.\n\nLos primeros dias hay escepticismo. La gente de Roma ha aprendido a no fiarse de las promesas de mejora. Ha visto demasiados rescatadores que resultaron ser otra forma del mismo problema. Pero cuando la segunda torre cae, y luego la tercera, algo cambia en el aire de la ciudad.\n\nEspacio. La gente empieza a caminar diferente en los barrios donde las torres han caido. Mas erguida. Con la cabeza menos baja. El espacio fisico de la amenaza eliminada produce espacio psicologico casi inmediatamente.\n\nTreinta y cinco sesiones. Cada una vale. Cada largo devuelve algo.'},
+  {game:'Brotherhood',tag:'tag-bro',title:'Machiavelo',
+   summary:'"El fin justifica los medios." Los dos tienen razon a medias.',
+   text:'Niccolo Machiavelo es el hombre mas incomodo y mas interesante que Ezio ha conocido hasta ahora, que es mucho decir dado el elenco de personajes que ha encontrado en estos anos.\n\nEscribe y piensa cosas que nadie dice en voz alta: que el poder funciona de cierta manera independientemente de si esa manera es moralmente correcta. Que un gobernante eficaz a veces tiene que hacer cosas que un hombre bueno no haria. Que la moral y la eficacia politica son idiomas distintos que raramente se traducen limpiamente el uno al otro.\n\nEzio no esta de acuerdo con todo. Le parece que Machiavelo tiene razon en el diagnostico del poder pero se equivoca en la prescripcion. Que decir que el fin justifica los medios es correcto como descripcion de como funciona el mundo pero no como guia de como deberia funcionar.\n\nDiscuten. Machiavelo aprecia la discusion. Es el tipo de hombre que no tiene interes en tener razon: tiene interes en entender.\n\nComo casi siempre: la verdad esta a medias entre dos posiciones que parecen incompatibles. Treinta y seis sesiones.'},
+  {game:'Brotherhood',tag:'tag-bro',title:'Claudia, la hermana',
+   summary:'La fuerza tiene muchas formas.',
+   text:'Claudia Auditore lleva anos viviendo en la sombra de su hermano sin que eso haya hecho de ella una persona menor. Al contrario: ha construido algo propio, silencioso y extraordinariamente efectivo.\n\nDirige una red de informacion en Roma compuesta en su mayoria por mujeres que los hombres del poder no consideran dignas de atencion. Esa invisibilidad, que para otras seria una limitacion, ella la ha convertido en su mayor ventaja tactica.\n\nSaben cosas que ningun agente masculino podria saber porque los hombres poderosos se descuidan delante de quienes consideran invisibles. Hablan delante de ellas como se habla delante de los muebles. Y Claudia escucha y recuerda y transmite.\n\nEzio la mira con una mezcla de admiracion y algo que se parece a la verguenza. Ha subestimado a su hermana durante anos. Ha asumido sin preguntarse que su camino era el unico camino posible.\n\nLa fuerza tiene muchas formas. La tuya en el agua cada dia es una de ellas. Treinta y siete sesiones.'},
+  {game:'Brotherhood',tag:'tag-bro',title:'La guarida de los Asesinos',
+   summary:'El liderazgo no sustituye al trabajo propio.',
+   text:'La guarida de los Asesinos bajo las ruinas de un templo romano crece semana a semana. Ezio la ha construido pieza a pieza: reclutando, entrenando, organizando, delegando cuando aprende a confiar en el criterio de otros.\n\nAprender a delegar es mas dificil de lo que parecia al principio. Ezio es naturalmente alguien que prefiere hacer las cosas el mismo, que se fia mas de su propio juicio que del de nadie. Eso fue una ventaja cuando operaba solo. Ahora es un obstaculo.\n\nLiderar no es solo decidir. Es estar disponible para las preguntas que no tienen respuesta obvia. Es escuchar lo que la gente no dice directamente pero que esta en el espacio entre las palabras. Es saber cuando confiar en el criterio de alguien que sabe algo que tu no sabes, aunque eso sea incomodo.\n\nSigue entrenando cada dia. Sigue siendo el primero en la mision peligrosa cuando tiene sentido. El liderazgo no sustituye al trabajo propio: lo multiplica.\n\nTreinta y ocho sesiones. Tu tampoco dejas que nada sustituya a la sesion.'},
+  {game:'Brotherhood',tag:'tag-bro',title:'Caterina Sforza',
+   summary:'A veces reconocemos en otros lo que nos cuesta ver en nosotros mismos.',
+   text:'Caterina Sforza ha gobernado Forli de una manera que habria avergonzado a muchos hombres en su misma posicion. Ha resistido asedios. Ha enterrado a su marido y ha seguido gobernando. Ha tomado decisiones que sus consejeros le aconsejaban no tomar y ha resultado tener razon.\n\nCuando Ezio la rescata del Castel Sant Angelo, no necesita rescate tanto como la situacion sugiere. Tiene mas recursos internos de los que la mayoria habria conservado en esas circunstancias. Solo necesitaba que alguien le abriera la puerta.\n\nEs tan obstinada y tan feroz como Ezio. Eso crea entre ellos una tension que no es exactamente antagonismo ni exactamente acuerdo: es el reconocimiento entre dos personas que funcionan de la misma manera y que raramente encuentran a nadie que lo haga.\n\nA veces reconocemos en otros lo que nos cuesta ver en nosotros mismos. La obstinacion. La negativa a rendirse aunque todo el contexto diga que lo razonable es rendirse. La capacidad de aguantar mas de lo que nadie esperaria.\n\nTreinta y nueve sesiones. Tienes mas de eso de lo que crees.'},
+  {game:'Brotherhood',tag:'tag-bro',title:'La ingenieria de Leonardo',
+   summary:'Cuarenta sesiones. Hay momentos en que tambien sientes que vuelas.',
+   text:'Leonardo da Vinci le construye a Ezio una maquina voladora. No es lo que Ezio fue a pedirle, que era algo mucho mas prosaico, pero es tipico de Leonardo dar mas de lo que se pide cuando lo que da es mas interesante que lo que se pide.\n\nLa primera vez que Ezio vuela sobre Roma al amanecer es uno de los momentos mas extraordinarios de su vida, y ha tenido algunos extraordinarios. La ciudad desde arriba: el Tiber como una cinta plateada, el Vaticano con su cupula que no ha sido construida todavia pero cuyo espacio ya se nota en el skyline, las miles de torres y tejados rojizos.\n\nVuela durante minutos. Vuelve a tierra con suavidad relativa. Y lleva el resto del dia con una ligereza diferente, como si haber visto el mundo desde arriba hubiera cambiado algo en la perspectiva con que lo ve desde abajo.\n\nHay momentos en el entrenamiento en que algo parecido ocurre. Un largo que de repente sale solo, una serie que el cuerpo completa antes de que la mente haya terminado de quejarse. Momentos en que todo funciona como si no hubiera esfuerzo aunque el esfuerzo sea exactamente el mismo.\n\nCuarenta sesiones. Esos momentos son el motivo.'},
+  {game:'Brotherhood',tag:'tag-bro',title:'Cesare — El hijo del Papa',
+   summary:'La tuya, enfocada en el agua, es una herramienta.',
+   text:'Cesare Borgia es el enemigo mas peligroso que Ezio ha enfrentado. No por sus recursos militares, aunque los tiene. No por su inteligencia, aunque la tiene. Sino por algo mas dificil de combatir que el dinero o la astucia: la conviccion absoluta.\n\nCesare cree genuinamente, sin sombra de duda, que el mundo estaria mejor bajo su control. Que el es la persona correcta para decidir como debe funcionar todo. No finge creerlo para conseguir apoyo: lo cree de verdad con cada celula de su cuerpo.\n\nEsa clase de conviccion es aterradora precisamente porque no tiene limites morales. Cuando estas convencido de que tienes razon, cualquier medio que uses para imponer esa razon se justifica automaticamente. El fin siempre justifica los medios cuando el fin es tu propia version de la perfeccion.\n\nEzio tiene su propia version de la conviccion. Pero la suya esta dirigida hacia fuera, hacia algo mas grande que el mismo. La de Cesare esta dirigida hacia adentro, hacia su propia grandeza.\n\nCuarenta y una sesiones. La conviccion enfocada bien es la herramienta mas poderosa que existe.'},
+  {game:'Brotherhood',tag:'tag-bro',title:'El Manzana en manos de Cesare',
+   summary:'Tu trabajas con lo que tienes: cuerpo, agua, voluntad.',
+   text:'Cesare Borgia consigue el Manzana del Eden. El artefacto que Ezio habia custodiado desde la camara del Vaticano, que da la capacidad de influir en las mentes y amplificar el poder de quien lo usa mas alla de lo que cualquier ejercito podria dar.\n\nEzio lo pierde. Y tiene que aceptar eso: que a veces, aunque hagas todo bien, pierdes lo que custodiabas. Que a veces el plan falla no por un error tuyo sino por una conjuncion de circunstancias que no podias controlar completamente.\n\nLo que queda siempre es algo. Un cuerpo que sigue en pie. Una Hermandad que sigue organizada. Una voluntad que no ha cedido aunque el contexto haya empeorado. El trabajo es reconstruir desde lo que queda, no lamentarse por lo que falta.\n\nLos Templarios siempre quieren mas de lo que pueden manejar. Esa es su debilidad sistematica: la codicia los vuelve impredecibles, erraticos, incapaces de mantener las alianzas que necesitan. El exceso de poder corrompe la capacidad de usarlo bien.\n\nTu trabajas con lo que tienes: cuerpo, agua, voluntad. Cuarenta y dos sesiones.'},
+  {game:'Brotherhood',tag:'tag-bro',title:'La caida del Papa',
+   summary:'El poder sin limites siempre se vuelve contra quien lo porta.',
+   text:'Rodrigo Borgia muere envenenado por su propio hijo. Es una muerte que tiene la simetria oscura de las tragedias griegas: el hombre que construyo su poder sobre la traicion y el envenenamiento de otros muere exactamente de la misma forma a manos de alguien que aprendio sus metodos directamente de el.\n\nEzio lo oye y no siente lo que espera. Ha pasado anos con la muerte de Rodrigo Borgia en el horizonte de sus objetivos. Cuando llega, no por su mano sino por las de su propio hijo, deberia sentir algo. Cierre, quiza. O justicia.\n\nSiente principalmente cansancio. El cansancio profundo de quien ha cargado con algo durante mucho tiempo y de repente lo suelta, pero el cansancio de cargar no desaparece instantaneamente con soltarlo.\n\nY sabe que la guerra no ha terminado. Cesare sigue vivo. La organizacion Templaria sigue en pie bajo nueva direccion. La muerte de Rodrigo es un capitulo cerrado, no el final del libro.\n\nEl poder sin limites siempre se vuelve contra quien lo porta. Cuarenta y tres sesiones.'},
+  {game:'Brotherhood',tag:'tag-bro',title:'La batalla de Viana',
+   summary:'"Un hombre que dice que no puede morir ya esta muerto."',
+   text:'Ezio persigue a Cesare Borgia hasta Viana, en Navarra, una ciudad pequena junto al camino de Santiago que no deberia aparecer en ninguna historia grande pero que aparece en esta. Las historias importantes terminan a veces en lugares que nadie esperaria.\n\nCesare ha huido de Roma, ha perdido sus ejercitos, ha perdido el apoyo de los estados italianos, ha perdido todo excepto la certeza absoluta de que tiene razon y de que el mundo le debe una segunda oportunidad. Esa certeza lo hace mas peligroso, no menos.\n\nNadie puede matarme, grita Cesare desde las murallas de Viana, con ese tono de quien ha dicho la misma frase tantas veces que ya no es una afirmacion sino un mantra, una oracion dirigida a un dios que ya no escucha.\n\nUn hombre que dice que no puede morir ya esta muerto, responde Ezio desde abajo. Solo le falta caer.\n\nLa arrogancia que niega la posibilidad del fracaso ya ha perdido. No puede aprender de sus errores porque no puede admitir que los comete. Cuarenta y cuatro sesiones. Seguimos.'},
+  {game:'Brotherhood',tag:'tag-bro',title:'La caida de Cesare Borgia',
+   summary:'La arrogancia siempre cae.',
+   text:'Cesare Borgia cae desde las murallas de Viana. No de forma heroica, no con un discurso final memorable, no con la elegancia que el mismo habria querido para su muerte imaginada. Simplemente cae.\n\nEl hombre que destruyo Monteriggioni, que mato a Mario, que domino Roma durante anos, que se creia destinado a gobernar Italia y luego Espana y luego todo, termina en una ciudad que no pone en los mapas importantes, caido de un muro en una batalla que nadie recordara especialmente.\n\nEzio lo observa desde arriba y no siente triumph. La arrogancia de Cesare lo ha condenado tan completamente que ni siquiera queda espacio para la satisfaccion de haberlo vencido. Es como ganar una discusion con alguien que ya habia perdido antes de que empezara.\n\nLa constancia siempre derrota a la arrogancia a largo plazo. La arrogancia hace movimientos brillantes pero inconsistentes. La constancia hace movimientos ordinarios de forma extraordinariamente regular.\n\nCuarenta y cinco sesiones. La constancia nunca cae.'},
+  {game:'Brotherhood',tag:'tag-bro',title:'Roma liberada',
+   summary:'Ezio tiene 35 anos. La mitad de su vida adulta en esto.',
+   text:'Con Cesare muerto y el Manzana del Eden recuperado, Roma empieza a respirar de una forma que no habia hecho en anos. No de golpe, no como si alguien hubiera apagado un interruptor del miedo. Sino gradualmente, barrio a barrio, semana a semana.\n\nLas torres de los Borgia que quedan en pie caen. No destruidas por Ezio esta vez, sino por el propio pueblo de Roma que lleva anos esperando ese momento y que ya no tiene miedo de actuar cuando ve que el poder que lo amenazaba ha caido.\n\nEzio camina por Roma una manana de primavera, meses despues del final de Cesare, y la ciudad es diferente de una manera que no puede describir con precision pero que siente en el cuerpo. Mas ruido. Mas gente en las plazas. Las cabezas mas altas, las conversaciones mas largas, las risas mas frecuentes.\n\nEzio tiene treinta y cinco anos. La mitad de su vida adulta la ha pasado en esto. Es mucho y no es suficiente al mismo tiempo, que es la condicion permanente de quien hace algo que importa.\n\nCuarenta y seis sesiones. Mira atras. Ya eres otra persona.'},
+  {game:'Brotherhood',tag:'tag-bro',title:'El Manzana escondido',
+   summary:'Algunas victorias consisten en no usar lo que podrias usar.',
+   text:'El Manzana del Eden lleva en manos de Ezio demasiado tiempo ya. Lo ha usado con moderacion, con consciencia de sus riesgos, pero la mera posesion de un artefacto que puede influir en las mentes es un riesgo que no quiere asumir indefinidamente.\n\nDecide enterrarlo. No destruirlo, porque no sabe si puede ser destruido y no quiere descubrirlo de la manera equivocada. Enterrarlo donde sea dificil de encontrar, donde las personas equivocadas no puedan llegar aunque sepan que existe.\n\nLo entierra bajo Santa Maria in Aracoeli, en el centro de Roma, en un lugar que ha verificado que no sera perturbado por construcciones ni excavaciones en los proximos anos.\n\nHay una leccion en esto que no habia considerado del todo antes: que algunas victorias consisten exactamente en no usar lo que podrias usar. Que la renuncia al poder disponible es en si misma un ejercicio de poder. Que la autodisciplina es mas rara y mas valiosa que la fuerza.\n\nCuarenta y siete sesiones. Eso tambien es una forma de fuerza.'},
+  {game:'Brotherhood',tag:'tag-bro',title:'Desmond despierta',
+   summary:'Los habitos que construyes dejan marca en quien los construye.',
+   text:'En el presente, Desmond Miles sale del Animus despues de haber revivido la vida de Ezio desde Florencia hasta Roma. Ha pasado semanas dentro de la maquina. Su cuerpo sabe cosas que su mente no ha aprendido conscientemente.\n\nTiene reflejos que no existian antes. Una forma de evaluar el espacio fisico que es diferente. Una postura diferente. Como si el cuerpo hubiera absorbido algo de la experiencia de Ezio aunque la experiencia fuera sintetica, aunque fuera en una maquina, aunque la distincion entre vivido y simulado sea filosoficamente perturbadora.\n\nEsto es lo que el Efecto Sangre hace: las memorias de los antepasados quedan grabadas en el ADN y pueden reactivarse. No como recuerdos de los que uno es consciente todo el tiempo, sino como competencias, como reflejos, como formas de ver el mundo que parecen propias aunque vengan de otro.\n\nLos habitos que construyes dejan marca. En el cuerpo, en los reflejos, en como percibes el espacio y el tiempo y el esfuerzo. No se borran. Se convierten en parte de lo que eres.\n\nCuarenta y ocho sesiones. Tu cuerpo tambien esta aprendiendo cosas que tu mente no sabe todavia que sabe.'},
+  {game:'Brotherhood',tag:'tag-bro',title:'La Hermandad en pie',
+   summary:'El exito real es que lo que creas sobreviva tu presencia.',
+   text:'Los ultimos dias de Ezio en Roma son dias de transfer, de conversion de un sistema que funcionaba con el en el centro a un sistema que puede funcionar sin el. No porque quiera irse todavia, sino porque un sistema que depende de una sola persona es un sistema fragil.\n\nEntrena a los lideres de la Hermandad para que tomen decisiones sin consultarlo. Establece protocolos para situaciones que todavia no han ocurrido pero que podrian ocurrir. Documenta lo que sabe de una forma que sea util para quien venga despues.\n\nAprende que delegar de verdad es mas dificil que hacer las cosas uno mismo. Hacer las cosas uno mismo es eficiente a corto plazo pero insostenible. Delegar de verdad, con confianza real y sin microgestionar, es ineficiente a corto plazo pero es lo unico que funciona a largo.\n\nEl exito real no es lo que consigues. Es lo que creas que sigue existiendo cuando ya no estas. Los atletas lo saben: el cuerpo que construyes hoy es el que te llevara en cinco anos. No el de manana. El de dentro de cinco anos.\n\nCuarenta y nueve sesiones. Construyes para el futuro.'},
+  {game:'Brotherhood',tag:'tag-bro',title:'Brotherhood completado — El Maestro',
+   summary:'Cincuenta sesiones. Ha aprendido que reconstruir es mas valioso que destruir.',
+   text:'Ezio Auditore da Firenze tiene treinta y seis anos al final de Brotherhood. Es un numero que habria sonado imposiblemente viejo cuando tenia diecisiete y que ahora suena exactamente correcto para lo que es.\n\nHa perdido una villa y ha liberado una ciudad. Ha perdido a su tio y ha ganado cientos de hermanos y hermanas de eleccion. Ha empezado por venganza y ha terminado por algo que le costaria mucho mas explicar pero que siente mas verdadero: la defensa de una idea sobre como debe funcionar el mundo.\n\nHa aprendido que reconstruir es mas dificil que destruir. Que liderar es mas complicado que combatir. Que la paciencia es mas dificil de mantener que la agresividad. Que las cosas que mas valen son exactamente las mas dificiles.\n\nEl segundo acto ha terminado. El tercero empieza en Constantinopla, treinta y cinco anos despues de aquella manana en Florencia, con un Ezio que ya no tiene nada que demostrar a nadie excepto quiza a si mismo en algunos momentos de duda que tiene a las tres de la manana como todo el mundo.\n\nCincuenta sesiones. La mitad del camino. Empieza Revelations.'},
+  {game:'Revelations',tag:'tag-rev',title:'Constantinopla, 1511 — El ultimo viaje',
+   summary:'Cincuenta y una sesiones. Ezio tiene 52 anos y sigue.',
+   text:'Ezio tiene cincuenta y dos anos cuando llega a Constantinopla. El pelo blanco en las sienes, la barba con mas plata que oscuro, cicatrices que llevan decadas en su cuerpo y que ya no le recuerdan a nada especifico, solo al hecho general de haber estado en demasiados sitios donde pasaban cosas.\n\nLlega en barco al amanecer y Constantinopla aparece ante el como la ciudad mas compleja que ha visto en su vida, que es mucho decir dado que ha visto Florencia y Roma y Venecia. Mezquitas y torres y mercados y el Bosphorus dividiendo el mundo en dos continentes que se pueden cruzar en quince minutos en barca.\n\nNo viene a conquistar. Ya ha conquistado demasiado. Viene a entender. A encontrar las llaves que Altair dejo escondidas en esta ciudad, a abrir la biblioteca de Masyaf, a completar un ciclo que empezo mucho antes de que el naciera y que alguien tiene que cerrar.\n\nLlega con la sensacion de que este es el ultimo gran capitulo. No con tristeza: con la serenidad del que sabe donde esta y hacia donde va.\n\nCincuenta y una sesiones. Tu tambien buscas algo en el agua que todavia no sabes exactamente como nombrar.'},
+  {game:'Revelations',tag:'tag-rev',title:'La ciudad del estrecho',
+   summary:'La incomodidad de lo nuevo ya no le asusta.',
+   text:'Constantinopla es la ciudad donde se mezclan todo. Turcos y griegos y judios y armenios y venecianos y genoveses y arabes y persas, todos haciendo negocios en el mismo mercado, hablando idiomas que se superponen en el aire del Gran Bazar como capas de musica disonante que de alguna manera funciona.\n\nEzio no entiende la mayoria de lo que oye. Eso lo pone en una situacion de incomodidad que en otro tiempo le habria frustrado: la de no poder leer el contexto, de no saber exactamente que pasa en la conversacion entre los dos hombres de la tienda de telas.\n\nAprendio hace anos a no dejar que la incomodidad de lo desconocido lo paralizara. A tratar la desorientacion como informacion: hay cosas que no entiendes, eso significa que tienes cosas que aprender, eso es una oportunidad no un problema.\n\nObserva mas de lo que habla. Pregunta mas de lo que afirma. Aprende la ciudad en capas, como se aprende cualquier cosa compleja: primero la estructura basica, luego los matices, luego los matices de los matices.\n\nCincuenta y dos sesiones. El agua tampoco te resulta extrana ya. Te resulta conocida. Eso tambien lo construiste.'},
+  {game:'Revelations',tag:'tag-rev',title:'Yusuf Tazim',
+   summary:'La sabiduria no tiene direccion unica.',
+   text:'Yusuf Tazim es veinte anos mas joven que Ezio y sabe cosas que Ezio no sabe. Ese es el comienzo de su relacion: el reconocimiento mutuo de una competencia que no tiene que ver con la edad.\n\nRecibe a Ezio con humor, con respeto genuino aunque no reverencial, con el tono de alguien que aprecia al visitante pero que tambien sabe que el visitante esta en su ciudad y que las reglas de la ciudad son las reglas de Yusuf.\n\nEn Constantinopla hacemos las cosas diferente, Mentor, le dice en el primer encuentro. Hay en esa frase algo que no es insubordinacion pero que no es pura deferencia tampoco: es identidad propia, el orgullo de quien ha desarrollado algo valioso en su propio contexto y no necesita la aprobacion del centro para saber que es valioso.\n\nEzio aprende de alguien mas joven. No siempre es comodo, pero es necesario. La sabiduria no viaja solo de mayor a menor. Tambien viaja en sentido contrario cuando uno sabe escuchar.\n\nCincuenta y tres sesiones. Aprende de donde puedas.'},
+  {game:'Revelations',tag:'tag-rev',title:'La biblioteca de Altair',
+   summary:'El pasado le ensenha al presente lo que el presente aun no sabe.',
+   text:'Las cinco llaves que abren la biblioteca de Altair en Masyaf estan dispersas por Constantinopla, escondidas por generaciones de Asesinos que las protegieron con su vida. Cada llave es un recuerdo grabado: una memoria de Altair que puede ser revivida por quien la encuentra.\n\nEzio las busca una a una. Cada busqueda es una historia en si misma, un laberinto de Templarios Byzantinos que quieren lo mismo que el, de aliados inesperados, de ciudades dentro de la ciudad que no aparecen en los mapas oficiales.\n\nLa idea de que puede comunicarse con alguien que murio trescientos anos atras a traves de sus recuerdos le parece a Ezio entre lo mas extrano que ha experimentado, y ha experimentado cosas muy extranas. Pero es lo que hay.\n\nEl pasado le ensenha cosas que el presente todavia no sabe. Esto es lo que la historia hace cuando se la escucha bien: no solo te dice lo que ocurrio, te dice lo que puede ocurrir, lo que ocurrira probablemente, los patrones que se repiten porque la naturaleza humana se repite.\n\nCincuenta y cuatro sesiones. La experiencia acumulada tiene su valor.'},
+  {game:'Revelations',tag:'tag-rev',title:'Los jenizaros',
+   summary:'Respetar a los obstaculos competentes es mas honesto que despreciarlos.',
+   text:'Los jenizaros son la guardia de elite del Imperio Otomano. Soldados desde ninos, entrenados durante decadas, leales con la intensidad de quien no tiene otra cosa que su lealtad. Son el obstaculo mas constante y mas competente que Ezio encuentra en Constantinopla.\n\nLos respeta completamente. No en el sentido de que el respeto lo paralice, sino en el sentido de que nunca los subestima y nunca comete dos veces el mismo error con ellos.\n\nAprendio hace anos de Mario que el mayor error que cometes con un adversario competente es no tomarlo en serio. Que la arrogancia ante el enemigo es el camino mas rapido al fracaso. Que el respeto por lo que el adversario puede hacer es la base de cualquier estrategia efectiva.\n\nYusuf le contara una tarde: los jenizaros son los mejores de los mejores porque llevan toda la vida haciendolo. Lo que les hace peligrosos es exactamente lo mismo que te hace peligroso a ti: la repeticion hasta que se convierte en segunda naturaleza.\n\nCincuenta y cinco sesiones. Lo que haces con regularidad se convierte en quien eres.'},
+  {game:'Revelations',tag:'tag-rev',title:'Sofia Sartor',
+   summary:'La vida tiene capas. Cincuenta y seis sesiones.',
+   text:'Sofia Sartor tiene una libreria en el Gran Bazar que huele a papel viejo, a cuero, a la madera de los estantes que llevan ahi mas tiempo que cualquier persona que los haya visto. Es veneciana, como Ezio. Vino a Constantinopla por libros, por el conocimiento que aqui se conserva en bibliotecas que el Occidente perdio o destruyo.\n\nEzio entra a su tienda buscando un libro especifico que necesita para encontrar una de las llaves. Sale tres horas despues sin el libro pero con algo diferente.\n\nSe han quedado hablando. Primero del libro, luego de los libros en general, luego de Venecia, luego de idiomas, luego de cosas que Ezio no recuerda haber hablado con nadie en anos sin que hubiera una mision de por medio.\n\nEs la primera vez en mucho tiempo que esta en una conversacion que no tiene ningun otro objetivo que la conversacion misma. La primera vez que el tiempo pasa sin que ninguna parte de el este calculando el siguiente movimiento.\n\nLa vida tiene capas que solo se revelan cuando dejas de correr. Cincuenta y seis sesiones.'},
+  {game:'Revelations',tag:'tag-rev',title:'Los recuerdos de Altair — Joven',
+   summary:'Ve cuanto ha cambiado y cuanto tardaron los cambios.',
+   text:'La primera llave revela a Altair con veinticuatro anos. Arrogante, seguro de si mismo con la seguridad del que no ha sido probado todavia de las formas que realmente importan. Comete un error grave en una mision y pierde su rango, sus privilegios, casi su lugar en la Orden.\n\nEzio lo vive desde dentro, con los sentidos de Altair, y reconoce algo que preferiria no reconocer: a si mismo. Al Ezio de diecisiete anos que corria por los tejados de Florencia convencido de que la intensidad de su proposito era suficiente para compensar cualquier error de juicio.\n\nVer cuanto ha cambiado es ver tambien cuanto tardaron los cambios en llegar. Los anos. Las perdidas. Las decisiones dificiles que no tenian una respuesta correcta clara, solo menos incorrectas. Nada de eso fue rapido ni indoloro.\n\nAltair joven no es el Altair del Codice. Pero es necesariamente el antecedente sin el cual el Altair del Codice no habria sido posible. No hay atajo entre los dos.\n\nCincuenta y siete sesiones. No hay atajo. Y eso esta bien.'},
+  {game:'Revelations',tag:'tag-rev',title:'Principe Suleiman',
+   summary:'La mejor educacion es la que no parece educacion.',
+   text:'Suleiman tiene diecisiete anos cuando Ezio lo conoce. El mismo que tenia Ezio cuando todo cambio. Es el nieto del sultan Bayezid y el hombre que la historia recordara como Suleiman el Magnifico, el gobernante que llevara el Imperio Otomano a su maxima extension y su maximo esplendor.\n\nEzio lo mira con la doble perspectiva de quien ha vivido lo suficiente como para ver el potencial sin que lo ciegue la admiracion. Ve las cualidades que haran de Suleiman lo que sera. Ve tambien los angulos ciegos, las areas donde la confianza en el propio juicio todavia no esta bien calibrada.\n\nDecide no decirle directamente lo que piensa. Ha aprendido que la declaracion directa raramente produce el efecto que buscas cuando hablas con alguien que aun esta formando quien es. En cambio hace preguntas. Ofrece perspectivas. Planta dudas que el otro resuelve solo y que por eso se convierten en sabiduria propia, no prestada.\n\nLa mejor ensenanza es la que no parece ensenanza. La que el estudiante no percibe como instruccion sino como conversacion. Cincuenta y ocho sesiones.'},
+  {game:'Revelations',tag:'tag-rev',title:'El asedio de Masyaf',
+   summary:'Lugares que fueron importantes guardan algo aunque esten vacios.',
+   text:'Masyaf, la antigua fortaleza de los Asesinos en las montanas de Siria, ha sido tomada por Templarios Byzantinos que buscan lo mismo que Ezio: las llaves, la biblioteca, el conocimiento de Altair.\n\nEzio la reconquista. No es rapido ni limpio, que las reconquistas nunca lo son. Es un trabajo de dias, pieza a pieza, limpiando cada torre y cada pasaje de soldados que saben que estan en posicion defensiva favorable y que la usaran hasta el final.\n\nCuando por fin puede entrar solo al interior, hay silencio. Un silencio que no es vacio sino denso, cargado de historia. Las paredes de piedra han visto generaciones de Asesinos entrenar, deliberar, morir, ser enterrados. Han absorbido todo eso de una manera que no es literal pero que se siente literal cuando eres el unico en el sitio y hay mucho silencio.\n\nLos lugares importantes guardan algo aunque esten vacios. La piscina a las siete de la manana antes de que llegue nadie tiene algo de eso tambien. Un espacio que ha visto esfuerzo acumulado.\n\nCincuenta y nueve sesiones.'},
+  {game:'Revelations',tag:'tag-rev',title:'Los recuerdos de Altair — La traicion',
+   summary:'Hay heridas que los siglos no curan pero que tampoco impiden seguir.',
+   text:'La segunda llave es la mas dura que Ezio revive. Altair descubriendo que Al Mualim, su maestro, el hombre al que ha servido toda su vida, al que ha dado su lealtad mas profunda, es un agente Templario. Que la Orden a la que creia servir ha estado corrompida desde arriba desde mucho antes de que el llegara.\n\nEs la traicion definitiva. No la de un enemigo declarado, que esas duelen pero tienen su logica. La del maestro. La de quien te dio el lenguaje con el que entiendes el mundo, los valores con los que evaluas lo que esta bien y lo que esta mal. Cuando esa persona resulta haber sido otra cosa todo el tiempo, no solo pierde ella: pierdes tu una parte del suelo bajo tus pies.\n\nAltair lo procesa de una manera que Ezio puede admirar aunque no pueda imitar exactamente: sin negar el dolor, sin hacer como si la traicion no fuera traicion, pero llevandolo consigo mientras sigue haciendo lo que tiene que hacer.\n\nHay heridas que los siglos no curan. Pero que tampoco impiden seguir. Esa distincion lo es todo. Sesenta sesiones.'},
+  {game:'Revelations',tag:'tag-rev',title:'Ahmet, el Templario',
+   summary:'Las cosas importantes no se descubren de golpe, sino capa a capa.',
+   text:'Ahmet, el principe, es el lider de los Templarios Byzantinos en Constantinopla. Ezio lo descubre despacio, como se descubren siempre las cosas que importan: no de golpe con una revelacion dramatica, sino acumulando indicios que al principio no parecen relacionados y que de repente, un dia, encajan de una forma que deberia haber sido obvia antes.\n\nHay algo diferente en Ahmet comparado con los Templarios que Ezio ha enfrentado a lo largo de su vida. No es codicia disfrazada de ideal, que es el patron mas comun. Es algo que empezo siendo genuinamente ideal y que se ha ido corrompiendo gradualmente hasta volverse irreconocible para quien lo portes pero perfectamente visible para quien lo mira desde fuera.\n\nEzio reconoce el patron porque lo ha visto otras veces y porque lo entiende de cerca: empieza con algo verdadero y bueno. Luego ese algo verdadero y bueno se convierte en una justificacion para todo. Y cuando se convierte en justificacion para todo, ya no es verdadero ni bueno: es una mascara.\n\nSesenta sesiones. Las cosas importantes se descubren capa a capa, con paciencia.'},
+  {game:'Revelations',tag:'tag-rev',title:'Los recuerdos de Altair — El exilio',
+   summary:'La dignidad no depende del reconocimiento externo.',
+   text:'La tercera llave muestra a Altair en el exilio. Ha salvado a su familia del ataque de un rival y por eso ha perdido todo lo demas: el rango, la posicion, el respeto de sus hermanos, la vida que habia construido dentro de la Orden durante decadas.\n\nVive en Chipre durante anos. No en condiciones de lujo ni de comodidad especial: en condiciones de quien ha caido de una posicion alta y tiene que reconstruir desde lo que queda. Trabaja. Observa. Escribe. Aprende cosas que no podria haber aprendido si hubiera seguido en el centro del poder, donde la perspectiva que da la distancia es imposible de tener.\n\nAcepta el castigo. No porque crea que es justo en todos sus terminos, sino porque entiende que venir de dentro de la estructura significa aceptar sus consecuencias incluso cuando esas consecuencias son duras. Eso es parte del codigo.\n\nY trabaja desde donde esta. Porque el trabajo es el trabajo independientemente de las circunstancias. La dignidad no depende del reconocimiento externo. Depende de seguir siendo quien eres cuando nadie esta mirando.\n\nSesenta y una sesiones. La dignidad esta en el trabajo, no en el aplauso.'},
+  {game:'Revelations',tag:'tag-rev',title:'Sofia en peligro',
+   summary:'La vida personal vuelve a tener peso.',
+   text:'Los Templarios secuestran a Sofia para presionar a Ezio. Es un movimiento previsto en el manual de presion basica: atacar lo que alguien ama para doblegar su voluntad, convertir un punto fuerte en vulnerabilidad.\n\nLo que Ezio no habia calculado completamente es la intensidad de lo que siente. Lleva decadas con la mision como prioridad absoluta, con los afectos personales en segundo plano por necesidad practica. Y de repente hay una persona especifica, un ser humano concreto, cuya seguridad importa mas que cualquier objetivo abstracto.\n\nNo es debilidad. Ezio tardara unos dias en entenderlo asi, pero es la verdad: no es debilidad. Es lo que significa estar vivo completamente, no solo funcionalmente. Es lo que se pierde cuando uno se convierte en pura eficiencia, en pura mision, en pura causa.\n\nLa vida personal vuelve a tener peso cuando llevas suficiente tiempo sin dejarle espacio. No como problema: como recordatorio de que eres humano y de que eso es exactamente lo correcto.\n\nSesenta y dos sesiones.'},
+  {game:'Revelations',tag:'tag-rev',title:'Los recuerdos de Altair — El regreso',
+   summary:'No hay retiro para quien ama lo que hace.',
+   text:'La cuarta llave muestra a Altair con noventa y dos anos. Todavia en pie. Todavia lucido con la lucidez de quien ha tenido decadas para refinar su manera de pensar y descartar todo lo que no es esencial. El hombre mas viejo que Ezio ha visto hacer lo que Altair hace en este recuerdo.\n\nRegresa a Masyaf. Expulsa a los corruptos que tomaron el control de la Orden durante su ausencia. Recupera lo que se puede recuperar. Graba el Codice definitivo: todo lo que sabe sobre combate, filosofia, el significado del codigo, las respuestas que encontro a las preguntas que lo llevaron al exilio.\n\nTrabaja hasta el ultimo dia que puede trabajar. No como obligacion, no como deber, sino como eleccion. Porque lo que hace tiene sentido para el. Porque el trabajo es la forma en que existe en el mundo y no quiere existir de otra manera mientras tenga la opcion de no hacerlo.\n\nNo hay retiro para quien ama lo que hace. Hay periodos de menor actividad, hay modulaciones del ritmo, hay descanso. Pero no hay un punto en que uno diga: ya hice suficiente, ya me detengo definitivamente.\n\nSesenta y tres sesiones.'},
+  {game:'Revelations',tag:'tag-rev',title:'La batalla del Bosoro',
+   summary:'A los 52 anos, la experiencia vale mas que la velocidad.',
+   text:'La batalla final con Ahmet ocurre en el Bosphorus, el estrecho que divide Constantinopla entre dos mundos. Ezio persigue a Ahmet que huye en un carruaje, y la persecucion se convierte en combate sobre el puente con el agua gris del estrecho quince metros abajo.\n\nEzio gana. No porque sea mas rapido que Ahmet, que a los cincuenta y dos anos ya no es el mas rapido en ninguna sala. No porque sea mas fuerte, que los anos tienen ese impacto y no tiene sentido fingir que no. Gana porque ha visto estas situaciones antes. Porque ha cometido todos los errores posibles en escenarios similares y los ha sobrevivido y ha aprendido de todos ellos.\n\nLa experiencia no es acumulacion de tiempo. Es la comprension de lo que ese tiempo ensenha cuando uno esta dispuesto a aprender. Hay personas que llevan veinte anos haciendo algo y siguen en el nivel de principiante porque nunca convirtieron la repeticion en aprendizaje.\n\nA los cincuenta y dos anos, la experiencia vale mas que la velocidad. La comprension vale mas que la fuerza. Sesenta y cinco sesiones. El agua tambien te esta dando eso.'},
+  {game:'Revelations',tag:'tag-rev',title:'El sultan Bayezid',
+   summary:'Saber cuando no actuar es la leccion mas dificil.',
+   text:'El sultan Bayezid II mata a su propio hijo Ahmet cuando descubre la traicion. Es un acto que tiene la calidad de la tragedia clasica: el padre que ejecuta lo que el mismo creo porque lo que creo se ha convertido en una amenaza para todo lo que el padre construyo.\n\nEzio observa desde la distancia y no interviene. Hay una tentacion: el momento tiene la cualidad de los momentos en que uno podria actuar y hacer algo dramatico que cambiara el resultado de alguna manera. Pero el resultado ya esta decidido. La intervencion solo complicaria lo que ya esta resuelto.\n\nSaber cuando no actuar. Saber cuando el momento correcto ha pasado o cuando todavia no ha llegado. Saber que la accion no siempre es la respuesta correcta incluso cuando la accion parece obvia.\n\nEs la leccion mas dificil que ha aprendido en estos anos. Mas dificil que cualquier tecnica de combate. Mas dificil que cualquier logistica de operacion compleja. La dificultad de la inaccion consciente cuando tienes la capacidad de actuar.\n\nSesenta y seis sesiones.'},
+  {game:'Revelations',tag:'tag-rev',title:'La ultima llave — Altair se despide',
+   summary:'Muere en paz, habiendo hecho todo lo que podia hacer.',
+   text:'La quinta y ultima llave muestra lo que Ezio habia estado esperando y al mismo tiempo lo que no esperaba completamente. Altair con noventa y dos anos. Solo en la biblioteca que ha construido. El Manzana del Eden en sus manos por ultima vez.\n\nSe sienta en la silla de piedra en el centro de la sala. El Manzana pulsa suavemente en su mano. Fuera, en el mundo, hay guerras y conspiraciones y el eterno movimiento de los imperios que suben y bajan. Aqui dentro hay silencio.\n\nAltair cierra los ojos. Muere.\n\nNo hay discurso final. No hay ultimo aliento dramatico con palabras memorables. Solo un hombre que ha hecho lo que tenia que hacer, que ha dejado lo que tenia que dejar, que ha llegado al final de su tiempo con la conciencia de no haber desperdiciado lo que tuvo.\n\nEzio llora. Por primera vez en anos, llorar completamente, sin urgencia de parar, sin la sensacion de que el llanto es un lujo que no puede permitirse. Le parece el tributo mas honesto que puede darle a Altair.\n\nSesenta y siete sesiones.'},
+  {game:'Revelations',tag:'tag-rev',title:'La biblioteca de Altair abierta',
+   summary:'"Esta no es una tumba, sino un mensajero."',
+   text:'La biblioteca se abre. Ezio habia imaginado muchas cosas sobre lo que encontraria: libros, artefactos, conocimiento en algun formato que pudiera llevarse. Lo que encuentra es el cuerpo de Altair, sentado tal como lo vio en el ultimo recuerdo, y una estructura en el centro de la sala que no es una biblioteca en el sentido convencional.\n\nEs una antena. Un emisor. Un dispositivo construido para enviar algo, un mensaje, una senhal, a quien tenga la capacidad y la preparacion para recibirlo. El conocimiento de Altair no esta en libros: esta grabado de una forma que trasciende los libros.\n\nEsta no es una tumba, dice Ezio en voz alta aunque no hay nadie escuchando. Es un mensajero.\n\nToda la vida de Altair trabajando, todo el Codice, toda la filosofia, todos los anos de exilio y regreso: todo ello era para este momento. Para dejar algo que pudiera seguir viajando despues de que el ya no pudiera hacerlo.\n\nEl conocimiento es el legado que no muere cuando muere quien lo porta. Sesenta y ocho sesiones.'},
+  {game:'Revelations',tag:'tag-rev',title:'El mensaje de Ezio a Desmond',
+   summary:'Que raro suena la palabra paz en su boca.',
+   text:'Ezio habla directamente a la camara. Sabe que alguien en el futuro estara mirando esto, que sus palabras viajaran por el tiempo de una forma que no comprende completamente en sus mecanismos pero que acepta en su realidad.\n\nDice que ha dedicado su vida a ser el mensajero. Que el mensaje no era para el. Que vivia en el Animus de alguien en el futuro, que alguien en el futuro necesitaria todo lo que el hizo para poder hacer lo que ese alguien tiene que hacer.\n\nLe desea respuestas a las preguntas que lo llevaron hasta aqui. Le desea valor para lo que venga. Le desea, al final, algo que la palabra le cuesta decir en voz alta despues de tantas decadas en que no ha sido una opcion real: paz.\n\nQue raro suena esa palabra en su boca, piensa mientras la dice. Que rara y que necesaria.\n\nSesenta y nueve sesiones. Hay cosas que haces cuyo sentido completo llegara mas tarde. Ahora mismo haces la parte que te toca.'},
+  {game:'Revelations',tag:'tag-rev',title:'El retiro — Sofia y Ezio',
+   summary:'Duerme bien por primera vez en decadas.',
+   text:'Ezio deja la Orden en una conversacion que dura menos de lo que deberia dada la importancia de lo que se esta decidiendo. Le dice a los lideres de la Hermandad que ya no. Escucha sus respuestas con respeto y sin cambiar de opinion. Y se va.\n\nVuelve a Italia con Sofia. Compran una finca en la Toscana, en la misma region donde nacio, entre vinedos y colinas y ese cielo particular de la Toscana que tiene una calidad de luz que no existe en ninguna otra parte del mundo exactamente igual.\n\nPlanta un vinedo. Sabe que no vera las primeras grandes cosechas: los vinedos tardan anos en dar su mejor fruta. No le importa. Hay una satisfaccion especifica en plantar algo cuyo fruto recogera otro, en hacer trabajo cuya recompensa trasciende tu propio tiempo.\n\nDuerme sin pesadillas por primera vez en decadas. Eso, descubre, es algo que no se puede valorar desde fuera de la experiencia: simplemente dormir, sin que el sueno sea otra forma de batalla.\n\nSetenta sesiones. Tu cuerpo tambien esta aprendiendo a descansar bien.'},
+  {game:'Revelations',tag:'tag-rev',title:'La carta a Claudia',
+   summary:'"Ahora quiero ser simplemente un hombre."',
+   text:'Ezio le escribe a su hermana Claudia, que lleva anos al frente de la Hermandad de Roma con una competencia que el siempre supo que tenia pero que tardo en reconocer completamente.\n\nLa carta es larga. Cubre cosas que deberian haberse dicho en persona durante anos y que la distancia y la urgencia permanente de las misiones hicieron imposible decir. Gratitud, primero. Luego admiracion genuina por lo que Claudia ha construido. Luego algo que se parece a una disculpa por los anos en que fue tan poco presente como hermano.\n\nAl final de la carta hay una frase que le costo escribir porque implica admitir algo que durante decadas habria considerado casi una debilidad: He sido guerrero. He sido explorador. He sido maestro. Ahora quiero ser simplemente un hombre.\n\nLa identidad no es permanente. Cambia. Lo que eras a los veinte anos no es necesariamente lo que eres a los cincuenta. Y ese cambio no es perdida: es crecimiento, es la prueba de que has vivido suficiente para superar las versiones anteriores de ti mismo.\n\nSetenta y una sesiones. Ya no eres el mismo que entro al agua el primer dia.'},
+  {game:'Revelations',tag:'tag-rev',title:'La hija — Flavia',
+   summary:'Se hace lo que se puede mientras se puede.',
+   text:'Ezio y Sofia tienen una hija. La llaman Flavia, que en latin significa dorada, que parece el nombre correcto para algo que llega a los cincuenta anos cuando ya no se esperaba que llegara.\n\nEzio la mira dormir en la cuna con esa mezcla de amor y melancolia que no sabia que podian coexistir con tanta intensidad. Amor por lo que es, por la vida que tiene delante, por la persona que sera. Melancolia porque sabe que hay partes de esa vida que ocurriran sin el, que hay momentos importantes que no vera.\n\nA su edad, con su historia, no puede hacerse la ilusion de que estara para todo. El tiempo tiene una aritmetica propia que no negocia con los deseos de nadie.\n\nPero planta el vinedo de todas formas. Escribe las cartas que pueden ser utiles para Flavia cuando el ya no este. Hace las cosas que se pueden hacer mientras se pueden hacer, con la serenidad de quien ha entendido que la limitacion del tiempo no hace las cosas menos valiosas sino mas.\n\nSetenta y dos sesiones. Se hace lo que se puede mientras se puede.'},
+  {game:'Revelations',tag:'tag-rev',title:'Firenze, 1524 — La plaza del mercado',
+   summary:'Muere en paz. En movimiento. Rodeado de vida.',
+   text:'Ezio tiene sesenta y cinco anos cuando visita Florencia por ultima vez. Va con Sofia, que lleva mas de veinte anos a su lado y que sigue siendo la persona con quien la conversacion nunca se acaba. Va con Flavia, que tiene quince anos y los ojos de su madre y la curiosidad de su padre.\n\nSe sienta en una plaza cerca del Arno. No la Piazza della Signoria donde vio morir a su padre: esa plaza la evita. Otra plaza mas pequena, con una fuente y una iglesia y el sonido constante de la ciudad que no para nunca.\n\nHabla con un viajero que llega a la plaza y le pregunta cosas sobre Florencia, sobre la historia de la ciudad, sobre recomendaciones para ver en poco tiempo. Ezio contesta con la paciencia y el placer de quien ya no tiene prisa por llegar a ningun lado.\n\nLe da un ataque al corazon. Muere en la plaza. Con el sol en la cara y la mano de Sofia y el sonido de la ciudad que continua.\n\nEn paz. En movimiento. Rodeado de vida. Setenta y tres sesiones.'},
+  {game:'Revelations',tag:'tag-rev',title:'Lo que queda',
+   summary:'Dejo una Hermandad, una familia, un legado.',
+   text:'Ezio Auditore da Firenze murio como vivio: en movimiento, en contacto con el mundo, con el sol en la cara y la gente cerca. No en una cama con los ultimos ritos y el silencio de las habitaciones donde se muere de forma conveniente y ordenada.\n\nDejo una Hermandad que funciona sin el, que es exactamente como queria que funcionara. Dejo una familia que sabe quien era y de donde venia y que eso, el conocimiento de la propia historia, es el regalo mas valioso que un padre puede dejar.\n\nDejo el Codice que escribio a lo largo de decadas y que contiene no solo tecnicas sino una manera de pensar sobre la libertad y la responsabilidad y el significado de servir a algo mas grande que uno mismo.\n\nDejo una pregunta abierta, como todas las vidas buenas dejan preguntas abiertas. No es una falta: es una invitacion. La historia no termina aqui.\n\nSetenta y cuatro sesiones. Una mas.'},
+  {game:'Revelations',tag:'tag-rev',title:'75 sesiones — La trilogia completada',
+   summary:'Tu has elegido esto. Y eso lo hace real.',
+   text:'Has completado la trilogia de Ezio Auditore da Firenze. Setenta y cinco sesiones. Desde Florencia hasta Constantinopla. Desde los diecisiete anos hasta los sesenta y cinco. Desde el principio hasta el final de uno de los personajes mas completos que el videojuego ha dado.\n\nY en paralelo: desde que empezaste hasta hoy. Desde el primer largo torpe hasta este. Desde antes de que esto fuera un habito hasta que se convirtio en parte de lo que eres. Esos dos recorridos han ido juntos, sesion a sesion, capitulo a capitulo.\n\nEzio dijo en la camara de Masyaf una frase que deberia tener mas peso que el que normalmente se le da: Nada es verdad, todo esta permitido. No como permiso para el caos. Como la comprension de que los limites que creemos fijos casi nunca lo son. Que lo que creia imposible en enero ya no lo es hoy.\n\nTu has elegido aparecer setenta y cinco veces. Has elegido el agua cuando era mas facil no elegirla. Has construido algo con el cuerpo y con el habito y con la constancia que no se puede simular ni falsificar ni comprar. Solo se construye, largo a largo, sesion a sesion, exactamente como lo has hecho.\n\nNo hay Animus que pueda falsificar eso. Es completamente tuyo.'}
+];
+
+// ── MAP CONFIG ───────────────────────────────────────────────
+// Positions carefully spaced to avoid overlap on any screen size
+// ── MAP CONFIG (fixed 300x140 grid, no overlaps) ──────────
+const MAP_NODES={
+  'Florencia':      {x:75,  y:72},
+  'Venecia':        {x:148, y:20},
+  'Monteriggioni':  {x:108, y:108},
+  'Roma':           {x:162, y:128},
+  'Viana':          {x:36,  y:100},
+  'Constantinopla': {x:238, y:55},
+  'Masyaf':         {x:308, y:16},
+};
+const MAP_VW=330,MAP_VH=148;
+const MAP_EDGES=[
+  ['Florencia','Venecia'],
+  ['Florencia','Monteriggioni'],
+  ['Monteriggioni','Roma'],
+  ['Roma','Viana'],
+  ['Viana','Florencia'],
+  ['Viana','Constantinopla'],
+  ['Constantinopla','Masyaf'],
+];
+
+const SESSION_CITY=[
+  'Florencia','Florencia','Florencia','Florencia','Monteriggioni',
+  'Monteriggioni','Monteriggioni','Monteriggioni','Monteriggioni','Florencia',
+  'Florencia','Florencia','Venecia','Venecia','Venecia',
+  'Venecia','Venecia','Venecia','Venecia','Venecia',
+  'Roma','Roma','Roma','Roma','Roma',
+  'Roma','Roma','Roma','Roma','Roma',
+  'Roma','Roma','Roma','Roma','Roma',
+  'Roma','Roma','Roma','Roma','Roma',
+  'Roma','Roma','Roma','Roma','Viana',
+  'Viana','Roma','Roma','Roma','Roma',
+  'Constantinopla','Constantinopla','Constantinopla','Constantinopla','Constantinopla',
+  'Constantinopla','Constantinopla','Constantinopla','Masyaf','Constantinopla',
+  'Constantinopla','Masyaf','Constantinopla','Masyaf','Constantinopla',
+  'Constantinopla','Masyaf','Masyaf','Masyaf','Masyaf',
+  'Masyaf','Masyaf','Masyaf','Masyaf','Masyaf',
+];
+
+// ── STATE ────────────────────────────────────────────────────
+let ST={sessions:[],workouts:[]};
+let selW=null,selF=null,curCustom=null,lastSD=null,curPDFSD=null;
+let curUser=null,localMode=false,obChoice='preset';
+
+// ── AUTH ─────────────────────────────────────────────────────
+function authTab(t){
+  document.querySelectorAll('.auth-tab').forEach((el,i)=>el.classList.toggle('on',['login','register'][i]===t));
+  document.getElementById('auth-login').style.display=t==='login'?'block':'none';
+  document.getElementById('auth-register').style.display=t==='register'?'block':'none';
+}
+function setAuthMsg(m,isError){
+  const el=document.getElementById('auth-msg');
+  el.textContent=m;
+  el.style.color=isError?'#e05030':'var(--or)';
+}
+
+async function doLogin(){
+  if(!sb){setAuthMsg('Configura Supabase primero.',true);return;}
+  const email=document.getElementById('login-email').value.trim();
+  const pass=document.getElementById('login-pass').value;
+  if(!email||!pass){setAuthMsg('Rellena email y contrasena.',true);return;}
+  setAuthMsg('Conectando...',false);
+  try{
+    const{data,error}=await sb.auth.signInWithPassword({email,password:pass});
+    if(error){
+      if(error.message.includes('rate limit'))setAuthMsg('Demasiados intentos. Espera unos minutos.',true);
+      else setAuthMsg('Error: '+error.message,true);
+      return;
+    }
+    curUser=data.user;
+    await loadSB();
+    await loadProfile();
+    showApp(email);
+  }catch(e){setAuthMsg('Error de conexion.',true);}
+}
+
+async function doRegister(){
+  if(!sb){setAuthMsg('Configura Supabase primero.',true);return;}
+  var nickEl=document.getElementById('reg-nick');
+  var nick=nickEl&&nickEl.value.trim()?nickEl.value.trim():'Asesino';
+  const email=document.getElementById('reg-email').value.trim();
+  const pass=document.getElementById('reg-pass').value;
+  if(!email){setAuthMsg('Email invalido.',true);return;}
+  if(pass.length<6){setAuthMsg('Minimo 6 caracteres.',true);return;}
+  setAuthMsg('Creando cuenta...',false);
+  try{
+    const{data,error}=await sb.auth.signUp({email,password:pass});
+    if(error){
+      if(error.message.includes('rate'))setAuthMsg('Supabase limita registros. Espera 1h o usa otro email.',true);
+      else setAuthMsg('Error: '+error.message,true);
+      return;
+    }
+    curUser=data.user;
+    if(curUser){
+      userProfile={nickname:nick,email:email,sessions_count:0};
+      var pr=await sb.from('profiles').insert({id:curUser.id,email:email,nickname:nick,sessions_count:0});
+      if(pr.error)console.warn('profile create:',pr.error.message);
+    }
+    setAuthMsg('',false);
+    showOnboarding();
+  }catch(e){setAuthMsg('Error de conexion.',true);}
+}
+function useLocal(){
+  localMode=true;
+  try{const d=localStorage.getItem('ezio_v5');if(d)ST=JSON.parse(d);}catch(e){}
+  if(!ST.workouts||!ST.workouts.length)showOnboarding();
+  else showApp('local');
+}
+
+function showOnboarding(){
+  document.getElementById('auth-screen').style.display='none';
+  document.getElementById('onboarding').style.display='flex';
+}
+function selectOB(c){
+  obChoice=c;
+  document.getElementById('ob-preset').classList.toggle('sel',c==='preset');
+  document.getElementById('ob-blank').classList.toggle('sel',c==='blank');
+}
+function getAvaInfo(n){
+  if(n>=51)return{key:'rev',era:'AC Revelations — Constantinopla',age:'52 anos · Maestro Mayor'};
+  if(n>=31)return{key:'bro',era:'AC Brotherhood — Roma',age:'36 anos · Maestro Asesino'};
+  return{key:'ac2',era:'AC II — Italia',age:'17-21 anos · Asesino en formacion'};
+}
+const PRESET_WORKOUTS=[
+  {name:'Resistencia',dist:2050,description:'250 suave\n4x100 Tecnica\n3x500 ritmo comodo\n200 suave soltar'},
+  {name:'Tecnica y fondo',dist:2150,description:'250 suave\n4x100 Tecnica\n4x100\n3x400 ritmo comodo\n4x50 tecnica\n200 suaves'},
+  {name:'Tecnica pura',dist:1950,description:'250 suaves\n6x50 tecnica\n4x100 tecnica controlada\n3x100 ritmo medio\n4x50 pull suave\n200 suave'},
+  {name:'Combinado',dist:2050,description:'250 suaves\n4x50 tecnica\n5x200 ritmo medio\n4x50 suaves recuperacion\n200 suaves'},
+];
+let userProfile=null;
+async function loadProfile(){
+  if(!sb||!curUser)return;
+  var r=await sb.from('profiles').select('*').eq('id',curUser.id).single();
+  if(!r.error&&r.data)userProfile=r.data;
+}
+async function upsertProfile(fields){
+  if(!sb||!curUser)return;
+  fields.id=curUser.id;
+  var r=await sb.from('profiles').upsert(fields,{onConflict:'id'});
+  if(r.error)console.warn('upsertProfile:',r.error.message);
+  else if(userProfile)Object.assign(userProfile,fields);
+}
+async function finishOnboarding(){
+  if(obChoice==='preset'){
+    ST.workouts=PRESET_WORKOUTS.map(w=>({id:'p_'+Math.random().toString(36).slice(2),name:w.name,dist:w.dist,description:w.description}));
+    if(curUser&&sb){
+      for(const w of ST.workouts){
+        const{data,error}=await sb.from('workouts').insert({user_id:curUser.id,name:w.name,dist:Number(w.dist)||0,description:w.description||''}).select().single();
+        if(error)console.error('onboarding insert:',error.message);
+        else if(data)w.id=data.id;
+      }
+    }
+  }
+  saveLocal();
+  document.getElementById('onboarding').style.display='none';
+  showApp(curUser?curUser.email:'local');
+  renderWorkouts();
+}
+
+async function doLogout(){
+  if(sb&&!localMode){try{await sb.auth.signOut();}catch(e){}}
+  curUser=null;localMode=false;ST={sessions:[],workouts:[]};
+  selW=null;selF=null;curCustom=null;lastSD=null;
+  document.getElementById('app').style.display='none';
+  document.getElementById('auth-screen').style.display='flex';
+  setAuthMsg('',false);
+}
+
+function showApp(label){
+  document.getElementById('auth-screen').style.display='none';
+  document.getElementById('onboarding').style.display='none';
+  document.getElementById('app').style.display='block';
+  var dispName=userProfile&&userProfile.nickname?userProfile.nickname:(label==='local'?'Modo local':label.split('@')[0]);
+  var dispMail=label==='local'?'':(label);
+  document.getElementById('user-email').textContent=dispName+' ('+dispMail+')';
+  renderAll();renderWorkouts();renderHist();renderMyWorkouts();
+  setTimeout(buildMap,80);
+}
+
+// ── SUPABASE ─────────────────────────────────────────────────
+async function loadSB(){
+  if(!sb||!curUser){console.log('loadSB: no sb or user');return;}
+  try{
+    const[{data:sess,error:e1},{data:works,error:e2}]=await Promise.all([
+      sb.from('sessions').select('*').eq('user_id',curUser.id).order('created_at',{ascending:true}),
+      sb.from('workouts').select('*').eq('user_id',curUser.id).order('created_at',{ascending:true}),
+    ]);
+    if(e1)console.error('loadSB sessions error:',e1.message);
+    if(e2)console.error('loadSB workouts error:',e2.message);
+    if(sess&&!e1)ST.sessions=sess.map(r=>({workout:r.workout,feeling:r.feeling,km:Number(r.km)||0,dist:Number(r.dist)||0,description:r.description||'',date:r.date,notes:r.notes||'',tStart:r.t_start||'',tEnd:r.t_end||'',pace:r.pace||''}));
+    if(works&&!e2)ST.workouts=works.map(r=>({id:r.id,name:r.name,dist:Number(r.dist)||0,description:r.description||''}));
+    console.log('loadSB: sessions='+ST.sessions.length+', workouts='+ST.workouts.length);
+  }catch(e){console.error('loadSB exception:',e);}
+}
+async function saveSessDB(s){
+  if(!sb||!curUser){console.log('saveSessDB: no sb or user');return;}
+  const payload={user_id:curUser.id,workout:s.workout,feeling:s.feeling,km:Number(s.km)||0,dist:Number(s.dist)||0,description:s.description||'',date:s.date,notes:s.notes||'',t_start:s.tStart||'',t_end:s.tEnd||'',pace:s.pace||''};
+
+
+  const{error}=await sb.from('sessions').insert(payload);
+  if(error){console.error('saveSessDB error:',error.message,error.details);showNotif('Error guardando: '+error.message);}
+}
+
+async function saveWorkoutDB(w){
+  if(!sb||!curUser)return;
+  const{data,error}=await sb.from('workouts').insert({user_id:curUser.id,name:w.name,dist:Number(w.dist)||0,description:w.description||''}).select().single();
+  if(error){console.error('saveWorkoutDB error:',error.message);}
+  else if(data){w.id=data.id;}
+}
+
+async function delWorkoutDB(id){
+  if(!sb||!curUser)return;
+  try{await sb.from('workouts').delete().eq('id',id).eq('user_id',curUser.id);}catch(e){}
+}
+function saveLocal(){if(localMode)try{localStorage.setItem('ezio_v5',JSON.stringify(ST));}catch(e){}}
+
+// ── HELPERS ──────────────────────────────────────────────────
+function totalKm(){return ST.sessions.reduce((a,s)=>a+s.km,0);}
+function getWeek(d){const t=new Date(d);t.setHours(0,0,0,0);t.setDate(t.getDate()-(t.getDay()||7)+1);return t.toISOString().slice(0,10);}
+function prevWeek(w){const d=new Date(w);d.setDate(d.getDate()-7);return d.toISOString().slice(0,10);}
+function calcStreak(){
+  if(!ST.sessions.length)return 0;
+  const wk={};ST.sessions.forEach(s=>{const w=getWeek(new Date(s.date));wk[w]=(wk[w]||0)+1;});
+  let n=0,w=getWeek(new Date());while(wk[w]){n++;w=prevWeek(w);}return n;
+}
+function getStory(n){return STORY[Math.min(n-1,STORY.length-1)];}
+
+function calcPace(){
+  const tS=document.getElementById('t-start').value;
+  const tE=document.getElementById('t-end').value;
+  const chip=document.getElementById('pace-chip');
+  if(!tS||!tE){chip.style.display='none';return;}
+  const[sh,sm]=tS.split(':').map(Number);
+  const[eh,em]=tE.split(':').map(Number);
+  let totalMin=(eh*60+em)-(sh*60+sm);
+  if(totalMin<=0)totalMin+=1440;
+  const dist=curCustom?curCustom.dist:(selW?ST.workouts.find(x=>x.id===selW)?.dist||0:0);
+  if(dist>0){
+    const pace100=totalMin/dist*100;
+    const pm=Math.floor(pace100);
+    const ps=Math.round((pace100-pm)*60);
+    chip.innerHTML='<strong>Duracion:</strong> '+totalMin+' min &nbsp;|&nbsp; <strong>Ritmo/100m:</strong> '+pm+':'+(ps<10?'0':'')+ps+' &nbsp;|&nbsp; <strong>Distancia:</strong> '+dist+' m';
+  }else{
+    chip.innerHTML='<strong>Duracion:</strong> '+totalMin+' min';
+  }
+  chip.style.display='block';
+}
+
+// ── MAP ──────────────────────────────────────────────────────
+function buildMap(){
+  const wrap=document.getElementById('map-wrap');if(!wrap)return;
+  const cW=Math.max(wrap.clientWidth||wrap.offsetWidth,200);
+  const cH=Math.round(MAP_VH*(cW/MAP_VW));
+  const n=ST.sessions.length;
+  const curCity=n>0?SESSION_CITY[Math.min(n-1,SESSION_CITY.length-1)]:'Florencia';
+  const visited=new Set(n>0?SESSION_CITY.slice(0,n):['Florencia']);
+
+  let svg='<svg width="'+cW+'" height="'+cH+'" viewBox="0 0 '+MAP_VW+' '+MAP_VH+'" xmlns="http://www.w3.org/2000/svg">';
+  MAP_EDGES.forEach(([a,b])=>{
+    const pa=MAP_NODES[a],pb=MAP_NODES[b];
+    const done=visited.has(a)&&visited.has(b);
+    svg+='<line x1="'+pa.x+'" y1="'+pa.y+'" x2="'+pb.x+'" y2="'+pb.y+'" stroke="'+(done?'#D85A30':'#3a2010')+'" stroke-width="1.2" stroke-dasharray="'+(done?'':'4,3')+'" stroke-linecap="round"/>';
+  });
+  Object.entries(MAP_NODES).forEach(([name,c])=>{
+    const isV=visited.has(name),isCur=name===curCity;
+    if(isCur){
+      svg+='<circle cx="'+c.x+'" cy="'+c.y+'" r="8" fill="#D85A30" opacity="0.15"/>';
+      svg+='<circle cx="'+c.x+'" cy="'+c.y+'" r="5" fill="#D85A30" stroke="#f5c090" stroke-width="1.5"/>';
+      svg+='<circle cx="'+c.x+'" cy="'+c.y+'" r="2" fill="white"/>';
+    }else if(isV){
+      svg+='<circle cx="'+c.x+'" cy="'+c.y+'" r="4" fill="#993C1D" stroke="#D85A30" stroke-width="1"/>';
+    }else{
+      svg+='<circle cx="'+c.x+'" cy="'+c.y+'" r="3.5" fill="#160c04" stroke="#4a2808" stroke-width="1"/>';
+    }
+    // Per-city label offsets to guarantee no overlap
+    const labelOff={
+      'Florencia':     {dx:8,  dy:0,  a:'start'},
+      'Venecia':       {dx:0,  dy:-9, a:'middle'},
+      'Monteriggioni': {dx:8,  dy:0,  a:'start'},
+      'Roma':          {dx:8,  dy:0,  a:'start'},
+      'Viana':         {dx:9,  dy:-11, a:'start'},
+      'Constantinopla':{dx:0,  dy:-9, a:'middle'},
+      'Masyaf':        {dx:-8, dy:0,  a:'end'},
+    };
+    const off=labelOff[name]||{dx:8,dy:0,a:'start'};
+    svg+='<text x="'+(c.x+off.dx)+'" y="'+(c.y+off.dy)+'" font-size="8.5" fill="'+(isV||isCur?'#c07040':'#4a2808')+'" text-anchor="'+off.a+'" font-weight="'+(isCur?'600':'400')+'" font-family="-apple-system,sans-serif">'+name+'</text>';
+  });
+  svg+='</svg>';
+  wrap.innerHTML=svg;
+}
+
+function updateAvatar(n){
+  var a=getAvaInfo(n);
+  var img=document.getElementById('ava-img');
+  if(img)img.src=AVA[a.key];
+  var el=document.getElementById('ava-era');if(el)el.textContent=a.era;
+  var al=document.getElementById('ava-age');if(al)al.textContent=a.age;
+}
+// ── RENDER ───────────────────────────────────────────────────
+function renderAll(){
+  const n=ST.sessions.length;
+  const pct=Math.min(Math.round((n/75)*100),100);
+  document.getElementById('sync-pct').textContent=pct+'%';
+  document.getElementById('s-ses').textContent=n;
+  document.getElementById('s-km').textContent=totalKm().toFixed(1);
+  document.getElementById('s-str').textContent=calcStreak();
+  document.getElementById('prog-fill').style.width=pct+'%';
+  document.getElementById('prog-left').textContent=n+' / 75 sesiones';
+  document.getElementById('prog-right').textContent=Math.floor(n/5)+' capitulos';
+  updateAvatar(n);
+  if(n>0){
+    const s=getStory(n);
+    const tag=document.getElementById('game-tag');
+    tag.textContent=s.game==='AC II'?"Assassin's Creed II":s.game==='Brotherhood'?'AC Brotherhood':'AC Revelations';
+    tag.className='game-tag '+s.tag;
+    document.getElementById('ch-name').textContent=s.title;
+    document.getElementById('ch-quote').textContent=s.summary;
+  }
+  buildMap();
+}
+
+function renderWorkouts(){
+  const g=document.getElementById('wgrid');g.innerHTML='';
+  ST.workouts.forEach(w=>{
+    const d=document.createElement('div');
+    d.className='wbtn'+(selW===w.id&&!curCustom?' sel':'');
+    d.innerHTML='<div class="wday">'+(w.dist/1000).toFixed(1)+' km</div><div class="wname">'+w.name+'</div><div class="wvol">'+w.dist+' m</div>';
+    d.onclick=()=>{selW=w.id;curCustom=null;renderWorkouts();calcPace();checkBtn();};
+    g.appendChild(d);
+  });
+  const cust=document.createElement('div');
+  cust.className='wbtn custom-card'+(curCustom?' sel':'');
+  cust.innerHTML=curCustom
+    ?'<div class="wday">Personalizado</div><div class="wname">'+curCustom.name+'</div><div class="wvol">'+curCustom.dist+' m</div>'
+    :'<div class="wday">Otro</div><div class="wname">Entreno personalizado</div><div class="wvol">Meter a mano</div>';
+  cust.onclick=()=>openCustom();
+  g.appendChild(cust);
+}
+
+function pickFeel(el){
+  selF=el.getAttribute('data-feel');
+  document.querySelectorAll('.fbtn').forEach(b=>b.classList.remove('sel'));
+  el.classList.add('sel');
+  checkBtn();
+}
+
+function checkBtn(){
+  document.getElementById('log-btn').disabled=!((selW||curCustom)&&selF);
+}
+
+// ── LOG SESSION ──────────────────────────────────────────────
+async function doLog(){
+  let w;
+  if(curCustom){w={name:curCustom.name,km:curCustom.dist/1000,dist:curCustom.dist,description:curCustom.description||''};}
+  else{const f=ST.workouts.find(x=>x.id===selW);w={name:f.name,km:f.dist/1000,dist:f.dist,description:f.description||f.desc||''};}
+  const now=new Date();
+  const notes=document.getElementById('notes').value.trim();
+  const tStart=document.getElementById('t-start').value;
+  const tEnd=document.getElementById('t-end').value;
+  // calc pace
+  let paceStr='';
+  if(tStart&&tEnd){
+    const[sh,sm]=tStart.split(':').map(Number);
+    const[eh,em]=tEnd.split(':').map(Number);
+    let tot=(eh*60+em)-(sh*60+sm);
+    if(tot<=0)tot+=1440;
+    if(w.dist>0){
+      const p100=tot/w.dist*100;
+      const pm=Math.floor(p100);const ps=Math.round((p100-pm)*60);
+      paceStr=tot+' min · '+pm+':'+(ps<10?'0':'')+ps+'/100m';
+    }else{paceStr=tot+' min';}
+  }
+  const sess={workout:w.name,feeling:selF,km:w.km,dist:w.dist,description:w.description||w.desc||'',date:now.toISOString(),notes,tStart,tEnd,pace:paceStr};
+  ST.sessions.push(sess);
+  if(curUser){
+    await saveSessDB(sess);
+    var nc=(userProfile?Number(userProfile.sessions_count)||0:0)+1;
+    await upsertProfile({sessions_count:nc,last_session:now.toISOString(),last_workout:w.name});
+  }
+  saveLocal();
+  const n=ST.sessions.length;
+  const story=getStory(n);
+  lastSD={sessionNum:n,workout:w.name,km:w.km,dist:w.dist,description:w.description||w.desc||'',feeling:selF,totalKm:totalKm(),streak:calcStreak(),notes,tStart,tEnd,pace:paceStr,date:now.toISOString(),story,prevStories:ST.sessions.slice(0,n).map((_,i)=>getStory(i+1))};
+  selW=null;selF=null;curCustom=null;
+  document.querySelectorAll('.fbtn').forEach(b=>b.classList.remove('sel'));
+  document.getElementById('notes').value='';
+  document.getElementById('t-start').value='';
+  document.getElementById('t-end').value='';
+  document.getElementById('pace-chip').style.display='none';
+  checkBtn();renderWorkouts();renderAll();renderHist();
+  showNotif(getAchievement(n)||'Memoria sincronizada — sesion #'+n+' desbloqueada.');
+  document.getElementById('preview-btn').style.display='block';
+}
+
+function getAchievement(n){
+  const m={5:'Capitulo completado — Ezio abandona Florencia.',10:'Venecia emerge en el horizonte.',15:'La Hermandad toma forma.',20:'El Carnaval y las sombras.',25:'Las puertas del Vaticano.',30:'AC II COMPLETADO. El maestro joven.',35:'Brotherhood — Roma bajo los Borgia.',40:'La Hermandad crece.',45:'Cesare acorralado.',50:'Brotherhood COMPLETADO. 50 sesiones.',55:'Revelations — Constantinopla te espera.',60:'Las llaves de Altair.',65:'Los recuerdos del primer Maestro.',70:'El ultimo mensaje de Ezio.',75:'TRILOGIA COMPLETA. Eres otro.'};
+  return m[n]||null;
+}
+function showNotif(msg){
+  const nb=document.getElementById('notif');
+  nb.textContent=msg;nb.style.display='block';
+  setTimeout(()=>nb.style.display='none',5000);
+}
+
+// ── CUSTOM WORKOUT ───────────────────────────────────────────
+function openCustom(){document.getElementById('custom-modal').classList.add('on');}
+function closeCustom(){document.getElementById('custom-modal').classList.remove('on');}
+async function confirmCustom(){
+  const name=document.getElementById('c-name').value.trim();
+  const dist=parseInt(document.getElementById('c-dist').value)||2000;
+  const desc=document.getElementById('c-desc').value.trim();
+  if(!name){alert('Pon un nombre al entreno.');return;}
+  const save=document.getElementById('save-workout').checked;
+  if(save){
+    const nw={id:'tmp_'+Date.now(),name,dist,desc};
+    ST.workouts.push(nw);
+    await saveWorkoutDB(nw);
+    saveLocal();renderMyWorkouts();
+  }
+  curCustom={name,dist,description:desc};selW=null;
+  document.getElementById('c-name').value='';document.getElementById('c-dist').value='';document.getElementById('c-desc').value='';
+  closeCustom();renderWorkouts();calcPace();checkBtn();
+}
+
+// ── MY WORKOUTS ──────────────────────────────────────────────
+function openNewWorkout(){document.getElementById('new-workout-modal').classList.add('on');}
+function closeNewWorkout(){document.getElementById('new-workout-modal').classList.remove('on');}
+async function saveNewWorkout(){
+  const name=document.getElementById('nw-name').value.trim();
+  const dist=parseInt(document.getElementById('nw-dist').value)||2000;
+  const desc=document.getElementById('nw-desc').value.trim();
+  if(!name){alert('Pon un nombre.');return;}
+  const nw={id:'tmp_'+Date.now(),name,dist,description:desc};
+  ST.workouts.push(nw);
+  await saveWorkoutDB(nw);
+  saveLocal();
+  document.getElementById('nw-name').value='';document.getElementById('nw-dist').value='';document.getElementById('nw-desc').value='';
+  closeNewWorkout();renderMyWorkouts();renderWorkouts();
+}
+async function deleteWorkout(id){
+  if(!confirm('Borrar este entreno?'))return;
+  ST.workouts=ST.workouts.filter(w=>w.id!==id);
+  await delWorkoutDB(id);
+  saveLocal();renderMyWorkouts();renderWorkouts();
+}
+function renderMyWorkouts(){
+  const list=document.getElementById('mw-list');
+  const empty=document.getElementById('mw-empty');
+  if(!ST.workouts.length){list.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  list.innerHTML=ST.workouts.map(function(w){
+    return '<div class="mw-item"><div class="mw-info"><div class="mw-name">'+w.name+'</div>'
+      +'<div class="mw-meta">'+w.dist+' m'+(w.description?' · '+w.description.split('\n')[0]:'')+' ...</div></div>'
+      +'<div class="mw-del" onclick="deleteWorkout(\''+w.id+'\')">×</div></div>';
+  }).join('');
+}
+
+// ── HISTORY ──────────────────────────────────────────────────
+function renderHist(){
+  const list=document.getElementById('hist-list');
+  const empty=document.getElementById('hist-empty');
+  if(!ST.sessions.length){list.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
+  list.innerHTML=[...ST.sessions].reverse().slice(0,40).map(function(s,ri){
+    var realI=ST.sessions.length-1-ri;
+    var d=new Date(s.date).toLocaleDateString('es-ES',{weekday:'short',day:'numeric',month:'short'});
+    var pace=s.pace?' · '+s.pace:'';
+    var stTitle=getStory(realI+1).title;
+    return '<div class="hist-item">'
+      +'<div class="hist-dot"></div>'
+      +'<div class="hist-info">'
+      +'<div class="hist-name">#'+(realI+1)+' '+s.workout+' · '+s.feeling+'</div>'
+      +'<div class="hist-meta">'+d+pace+'</div>'
+      +'<div class="hist-meta" style="color:var(--tx4);font-size:10px;">'+stTitle+'</div>'
+      +'</div>'
+      +'<div class="hist-act" onclick="openPreview('+realI+')">Ver</div>'
+      +'</div>';
+  }).join('');
+}
+
+// ── PDF PREVIEW ──────────────────────────────────────────────
+function buildSD(i){
+  const s=ST.sessions[i];const n=i+1;
+  const km=ST.sessions.slice(0,n).reduce((a,x)=>a+x.km,0);
+  return{sessionNum:n,workout:s.workout,km:s.km,dist:s.dist||0,description:s.description||s.desc||'',feeling:s.feeling,totalKm:km,streak:0,notes:s.notes||'',tStart:s.tStart||'',tEnd:s.tEnd||'',pace:s.pace||'',date:s.date,story:getStory(n),prevStories:ST.sessions.slice(0,n).map((_,j)=>getStory(j+1))};
+}
+function openPreview(idx){
+  curPDFSD=idx===null?lastSD:buildSD(idx);
+  if(!curPDFSD)return;
+  renderPreview(curPDFSD);
+  document.getElementById('pdf-overlay').classList.add('on');
+}
+function closePDF(){document.getElementById('pdf-overlay').classList.remove('on');}
+
+function renderPreview(sd){
+  const pct=Math.min(Math.round((sd.sessionNum/75)*100),100);
+  const tColors={'tag-ac2':'background:#FAECE7;color:#712B13','tag-bro':'background:#EEEDFE;color:#3C3489','tag-rev':'background:#E1F5EE;color:#085041'};
+  const tLabel=sd.story.game==='AC II'?"Assassin's Creed II":sd.story.game==='Brotherhood'?'AC Brotherhood':'AC Revelations';
+  const hist=sd.prevStories.slice(-5).map(function(st,i){
+    const ai=sd.sessionNum-sd.prevStories.slice(-5).length+i;
+    const ses=ST.sessions[ai];if(!ses)return'';
+    const d=new Date(ses.date).toLocaleDateString('es-ES',{day:'numeric',month:'short'});
+    return '<div class="pv-hist-item"><strong>#'+(ai+1)+' '+d+'</strong> — '+st.title+'</div>';
+  }).join('');
+  const storyParas=sd.story.text.split('\n\n').map(function(p){return '<p style="margin-bottom:10px;">'+p+'</p>';}).join('');
+  const workoutBlock=sd.description
+    ?('<div class="pv-sec"><div class="pv-lbl">Entreno realizado</div>'
+      +'<div class="pv-workout-block"><div class="pv-workout-title">'+sd.workout+' — '+sd.dist+' m</div>'
+      +'<div class="pv-workout-desc">'+sd.description+'</div></div></div>')
+    :'';
+  const notesBlock=sd.notes
+    ?('<div class="pv-sec"><div class="pv-lbl">Notas</div><div class="pv-notes">'+sd.notes+'</div></div>')
+    :'';
+  const histBlock=hist?('<div class="pv-sec"><div class="pv-lbl">Ultimas memorias</div>'+hist+'</div>'):'';
+  const timeRow=sd.tStart&&sd.tEnd
+    ?('<div style="font-size:11px;color:var(--tx3);margin-top:8px;">Inicio: '+sd.tStart+' &nbsp;·&nbsp; Fin: '+sd.tEnd+(sd.pace?' &nbsp;·&nbsp; '+sd.pace:'')+'</div>')
+    :'';
+  const paceStatVal=sd.pace||pct+'%';
+  const dateStr=new Date(sd.date).toLocaleDateString('es-ES',{weekday:'long',year:'numeric',month:'long',day:'numeric'}).toUpperCase();
+
+  const avaI=getAvaInfo(sd.sessionNum);
+  const avaImgHTML=AVA[avaI.key]?'<img src="'+AVA[avaI.key]+'" style="width:56px;height:56px;border-radius:50%;border:2px solid #D85A30;object-fit:cover;float:right;margin:-4px 0 8px 12px;">':'';
+  document.getElementById('pdf-scroll').innerHTML=
+    '<div class="pv-card">'
+    +'<div class="pv-header">'
+    +avaImgHTML
+    +'<span class="pv-sync">'+pct+'% sync</span>'
+    +'<div class="pv-animus">ANIMUS 2.0 // MEMORY SEQUENCE</div>'
+    +'<div class="pv-title">Nada con Ezio</div>'
+    +'<div class="pv-sub">'+avaI.era+'</div>'
+    +'</div>'
+    +'<div class="pv-sec">'
+    +'<div class="pv-lbl">Capitulo '+sd.sessionNum+' — Historia</div>'
+    +'<span class="pv-tag" style="'+tColors[sd.story.tag]+'">'+tLabel+'</span>'
+    +'<div class="pv-ch-name">'+sd.story.title+'</div>'
+    +'<div class="pv-chapter-body">'+storyParas+'</div>'
+    +'</div>'
+    +workoutBlock
+    +'<div class="pv-sec">'
+    +'<div class="pv-lbl">Datos de la sesion</div>'
+    +'<div class="pv-grid">'
+    +'<div class="pv-stat"><div class="pv-sl">Sesion</div><div class="pv-sv">#'+sd.sessionNum+'</div></div>'
+    +'<div class="pv-stat"><div class="pv-sl">Estado</div><div class="pv-sv">'+sd.feeling+'</div></div>'
+    +'<div class="pv-stat"><div class="pv-sl">Km sesion</div><div class="pv-sv">'+sd.km.toFixed(2)+'</div></div>'
+    +'<div class="pv-stat"><div class="pv-sl">Km totales</div><div class="pv-sv">'+sd.totalKm.toFixed(1)+'</div></div>'
+    +'<div class="pv-stat"><div class="pv-sl">Racha</div><div class="pv-sv">'+sd.streak+' sem</div></div>'
+    +'<div class="pv-stat"><div class="pv-sl">Sincronizacion</div><div class="pv-sv hi">'+pct+'%</div></div>'
+    +'</div>'
+    +timeRow
+    +'</div>'
+    +notesBlock
+    +histBlock
+    +'<div class="pv-footer"><div class="pv-ft">'+dateStr+' // NADA CON EZIO</div></div>'
+    +'</div>';
+}
+
+
+function downloadPDF(){
+  if(!curPDFSD||!window.jspdf){alert('PDF no disponible aun.');return;}
+  const sd=curPDFSD;
+  const{jsPDF}=window.jspdf;
+  const doc=new jsPDF({unit:'mm',format:'a4'});
+  const W=210,H=297;
+  const or=[216,90,48];
+
+  doc.setFillColor(15,10,5);doc.rect(0,0,W,H,'F');
+  doc.setFillColor(216,90,48);doc.rect(0,0,W,3,'F');
+  doc.setFillColor(28,18,8);doc.rect(0,3,W,44,'F');
+  doc.setTextColor(216,90,48);doc.setFontSize(7.5);doc.setFont('helvetica','bold');
+  doc.text('ANIMUS 2.0  //  MEMORY SEQUENCE',20,14);
+  const pct=Math.min(Math.round((sd.sessionNum/75)*100),100);
+  doc.setTextColor(140,100,60);doc.text('SYNC: '+pct+'%',W-20,14,{align:'right'});
+  doc.setTextColor(240,220,190);doc.setFontSize(19);doc.text('NADA CON EZIO',20,26);
+  doc.setTextColor(160,110,60);doc.setFontSize(8.5);doc.setFont('helvetica','normal');
+  doc.text('De Florencia a Constantinopla  //  Una sesion a la vez',20,35);
+  doc.setDrawColor(216,90,48);doc.setLineWidth(0.3);doc.line(20,47,W-20,47);
+
+  let cy=56;
+  // Avatar in PDF header
+  const avaInfo=getAvaInfo(sd.sessionNum);
+  if(AVA[avaInfo.key]){try{doc.addImage(AVA[avaInfo.key],'JPEG',W-52,5,40,40);doc.setDrawColor(216,90,48);doc.setLineWidth(0.8);doc.circle(W-32,25,20,'S');}catch(e){}}
+
+  // CHAPTER FULL TEXT
+  doc.setTextColor(216,90,48);doc.setFontSize(7);doc.setFont('helvetica','bold');doc.text('// CAPITULO DE HOY',20,cy);cy+=5;
+  doc.setFillColor(20,12,5);doc.rect(20,cy,W-40,70,'F');
+  doc.setDrawColor(70,40,15);doc.setLineWidth(0.2);doc.rect(20,cy,W-40,70);
+  doc.setFillColor(216,90,48);doc.roundedRect(24,cy+3,35,5,0.8,0.8,'F');
+  doc.setTextColor(255,230,200);doc.setFontSize(6);doc.setFont('helvetica','bold');
+  doc.text(sd.story.game==='AC II'?'ASSASSINS CREED II':sd.story.game==='Brotherhood'?'AC BROTHERHOOD':'AC REVELATIONS',41.5,cy+6.8,{align:'center'});
+  doc.setTextColor(200,160,100);doc.setFontSize(8);doc.setFont('helvetica','bold');
+  doc.text('MEMORIA '+sd.sessionNum+' DE 75',24,cy+14);
+  doc.setTextColor(235,215,185);doc.setFontSize(10.5);doc.setFont('helvetica','bold');
+  const nl=doc.splitTextToSize(sd.story.title,W-50);doc.text(nl,24,cy+21);
+  doc.setTextColor(148,108,68);doc.setFontSize(8.5);doc.setFont('helvetica','italic');
+  const fullTxt=sd.story.text.replace(/\n\n/g,' ');
+  const tl=doc.splitTextToSize(fullTxt,W-50);
+  doc.text(tl.slice(0,7),24,cy+21+(nl.length*5));
+  cy+=78;
+
+  // WORKOUT
+  if(sd.description){
+    doc.setTextColor(216,90,48);doc.setFontSize(7);doc.setFont('helvetica','bold');doc.text('// ENTRENO REALIZADO',20,cy);cy+=4;
+    doc.setFillColor(16,9,3);doc.rect(20,cy,W-40,30,'F');
+    doc.setDrawColor(55,30,10);doc.setLineWidth(0.2);doc.rect(20,cy,W-40,30);
+    doc.setTextColor(200,158,96);doc.setFontSize(9);doc.setFont('helvetica','bold');
+    doc.text(sd.workout+' — '+sd.dist+' m',24,cy+7);
+    doc.setTextColor(130,95,55);doc.setFontSize(8);doc.setFont('helvetica','normal');
+    const dl=doc.splitTextToSize(sd.description,W-52);doc.text(dl.slice(0,4),24,cy+13);
+    cy+=37;
+  }
+
+  // STATS
+  doc.setTextColor(216,90,48);doc.setFontSize(7);doc.setFont('helvetica','bold');doc.text('// DATOS DE LA SESION',20,cy);cy+=4;
+  const boxes=[
+    {l:'SESION',v:'#'+sd.sessionNum},{l:'ESTADO',v:sd.feeling},
+    {l:'KM SESION',v:sd.km.toFixed(2)+' km'},{l:'KM TOTALES',v:sd.totalKm.toFixed(1)+' km'},
+    {l:'RACHA',v:sd.streak+' sem'},{l:'RITMO/100m',v:sd.pace||'—'},
+  ];
+  const bW=(W-40)/3,bH=20;
+  boxes.forEach((b,i)=>{
+    const col=i%3,row=Math.floor(i/3),bX=20+col*bW,bY=cy+row*(bH+3);
+    doc.setFillColor(16,9,3);doc.rect(bX,bY,bW-2,bH,'F');
+    doc.setDrawColor(50,28,8);doc.setLineWidth(0.2);doc.rect(bX,bY,bW-2,bH);
+    doc.setTextColor(100,68,32);doc.setFontSize(6.5);doc.setFont('helvetica','normal');doc.text(b.l,bX+3,bY+6);
+    doc.setTextColor(230,190,140);doc.setFontSize(b.v.length>10?8.5:10);doc.setFont('helvetica','bold');doc.text(b.v,bX+3,bY+15);
+  });
+  cy+=2*(bH+3)+bH+10;
+
+  if(sd.tStart&&sd.tEnd){
+    doc.setTextColor(100,68,32);doc.setFontSize(8);doc.setFont('helvetica','normal');
+    doc.text('Inicio: '+sd.tStart+'  ·  Fin: '+sd.tEnd,20,cy);cy+=8;
+  }
+
+  if(sd.notes&&sd.notes.trim()){
+    doc.setTextColor(216,90,48);doc.setFontSize(7);doc.setFont('helvetica','bold');doc.text('// NOTAS',20,cy);cy+=4;
+    doc.setFillColor(16,9,3);doc.rect(20,cy,W-40,16,'F');
+    doc.setDrawColor(50,28,8);doc.setLineWidth(0.2);doc.rect(20,cy,W-40,16);
+    doc.setTextColor(158,118,68);doc.setFontSize(8.5);doc.setFont('helvetica','italic');
+    doc.text(doc.splitTextToSize(sd.notes,W-52).slice(0,2),24,cy+8);cy+=22;
+  }
+
+  const hist=sd.prevStories.slice(-4);
+  if(hist.length>1&&cy<H-50){
+    doc.setTextColor(216,90,48);doc.setFontSize(7);doc.setFont('helvetica','bold');doc.text('// ULTIMAS MEMORIAS',20,cy);cy+=6;
+    hist.forEach((st,i)=>{
+      const ai=sd.sessionNum-hist.length+i;const ses=ST.sessions[ai];
+      if(!ses||cy>H-38)return;
+      const d=new Date(ses.date).toLocaleDateString('es-ES',{day:'numeric',month:'short'});
+      doc.setTextColor(118,82,42);doc.setFontSize(8);doc.setFont('helvetica','normal');
+      doc.text('#'+(ai+1)+' '+d+' — '+st.title.slice(0,50),20,cy);cy+=5.5;
+    });
+  }
+
+  const fy=H-24;
+  doc.setDrawColor(42,22,6);doc.setLineWidth(0.2);doc.line(20,fy,W-20,fy);
+  doc.setTextColor(78,48,20);doc.setFontSize(7.5);doc.setFont('helvetica','normal');
+  const ds=new Date(sd.date).toLocaleDateString('es-ES',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  doc.text(ds.toUpperCase(),20,fy+7);
+  doc.text('NADA CON EZIO // AC TRAINING LOG',W-20,fy+7,{align:'right'});
+  doc.setFillColor(216,90,48);doc.rect(0,H-3,W,3,'F');
+  doc.save('memoria-ezio-'+sd.sessionNum+'.pdf');
+}
+
+// ── TABS ─────────────────────────────────────────────────────
+function goTab(t){
+  document.querySelectorAll('.tab').forEach((el,i)=>el.classList.toggle('on',['log','hist','mw','stats'][i]===t));
+  document.querySelectorAll('.view').forEach(el=>el.classList.remove('on'));
+  document.getElementById('view-'+t).classList.add('on');
+  if(t==='stats')renderStats();
+}
+
+// ── INIT ─────────────────────────────────────────────────────
+
+function renderStats(){
+  const n=ST.sessions.length;
+  const sc=document.getElementById('stats-content');
+  if(!n){sc.innerHTML='<p class="empty-msg">Sin sesiones todavia.</p>';return;}
+  const totalKmV=totalKm().toFixed(1);
+  const avgKmV=(totalKm()/n).toFixed(1);
+  const feelings={};
+  ST.sessions.forEach(s=>{feelings[s.feeling]=(feelings[s.feeling]||0)+1;});
+  const topFeel=Object.entries(feelings).sort((a,b)=>b[1]-a[1]);
+  const wFreq={};
+  ST.sessions.forEach(s=>{wFreq[s.workout]=(wFreq[s.workout]||0)+1;});
+  const topW=Object.entries(wFreq).sort((a,b)=>b[1]-a[1]);
+  const paced=ST.sessions.filter(s=>s.pace&&s.pace.includes('/100m'));
+  // 8-week heatmap
+  const now2=new Date();
+  const weeksData=[];
+  for(let w=7;w>=0;w--){
+    const days=[];
+    for(let d=6;d>=0;d--){
+      const dt=new Date(now2);dt.setDate(dt.getDate()-(w*7+d));
+      const ds=dt.toISOString().slice(0,10);
+      const cnt=ST.sessions.filter(s=>s.date&&s.date.slice(0,10)===ds).length;
+      days.push({date:ds,cnt});
+    }
+    weeksData.push(days);
+  }
+  const calHTML='<div style="display:flex;gap:3px;overflow-x:auto;padding:4px 0 8px;">'+
+    weeksData.map(w=>'<div style="display:flex;flex-direction:column;gap:3px;">'+
+      w.map(d=>'<div style="width:13px;height:13px;border-radius:2px;background:'+(d.cnt>0?'#D85A30':'#1e1008')+';border:0.5px solid '+(d.cnt>0?'#993C1D':'#3a2010')+';" title="'+d.date+(d.cnt?' ('+d.cnt+')':'')+'"></div>').join('')+
+    '</div>').join('')+
+  '</div>';
+  sc.innerHTML=
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;">'
+    +'<div class="stat-box"><div class="stat-n">'+totalKmV+'</div><div class="stat-l">Km totales</div></div>'
+    +'<div class="stat-box"><div class="stat-n">'+avgKmV+'</div><div class="stat-l">Km/sesion</div></div>'
+    +'<div class="stat-box"><div class="stat-n">'+n+'</div><div class="stat-l">Sesiones</div></div>'
+    +'<div class="stat-box"><div class="stat-n">'+calcStreak()+'</div><div class="stat-l">Racha sem.</div></div>'
+    +'</div>'
+    +'<div class="slbl">Ultimas 8 semanas</div>'
+    +calHTML
+    +'<div class="slbl">Feeling</div>'
+    +'<div style="margin-bottom:16px;">'+topFeel.map(function(e){return '<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:0.5px solid var(--border);">'
+      +'<span style="font-size:13px;color:var(--tx);flex:1;">'+e[0]+'</span>'
+      +'<span style="font-size:12px;color:var(--tx3);">'+e[1]+'x</span>'
+      +'<div style="width:'+Math.round(e[1]/n*60)+'px;height:4px;background:var(--or);border-radius:2px;min-width:4px;"></div>'
+      +'</div>';}).join('')+'</div>'
+    +'<div class="slbl">Entrenos</div>'
+    +'<div style="margin-bottom:16px;">'+topW.map(function(e){return '<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:0.5px solid var(--border);">'
+      +'<span style="font-size:13px;color:var(--tx);flex:1;">'+e[0]+'</span>'
+      +'<span style="font-size:12px;color:var(--tx3);">'+e[1]+'x</span>'
+      +'<div style="width:'+Math.round(e[1]/n*60)+'px;height:4px;background:var(--or);border-radius:2px;min-width:4px;"></div>'
+      +'</div>';}).join('')+'</div>'
+    +(paced.length?'<div class="slbl">Ultimos ritmos</div><div>'+paced.slice(-5).reverse().map(function(s){
+      var d=new Date(s.date).toLocaleDateString('es-ES',{day:'numeric',month:'short'});
+      return '<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:0.5px solid var(--border);">'
+        +'<span style="font-size:12px;color:var(--tx2);">'+d+' · '+s.workout.slice(0,16)+'</span>'
+        +'<span style="font-size:12px;color:var(--or);font-weight:600;">'+s.pace+'</span></div>';
+    }).join('')+'</div>':'');
+}
+
+window.addEventListener('resize',()=>{
+  if(document.getElementById('app').style.display!=='none')buildMap();
+});
+
+if(sb){
+  sb.auth.getSession().then(({data})=>{
+    if(data&&data.session){
+      curUser=data.session.user;
+      Promise.all([loadSB(),loadProfile()]).then(()=>showApp(data.session.user.email));
+    }
+  }).catch(()=>{});
+}
+</script>
+</body>
+</html>
